@@ -1,5 +1,5 @@
 services:
-  daily_planner:
+  candy_store:
     image: candy_store_image:latest
     build:
       context: .
