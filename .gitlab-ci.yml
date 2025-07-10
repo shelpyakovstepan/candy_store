@@ -9,13 +9,13 @@ stages:
 build-job:
   stage: build
   script:
-    - docker compose -f docker-compose.yaml build
+    - docker compose -f docker-compose.yml build
 
 run-job:
   stage: run
   needs: [build-job]
   script:
-    - docker compose -f docker-compose.yaml up -d
+    - docker compose -f docker-compose.yml up -d
 
 lint-test-job:
   stage: lint
@@ -45,7 +45,7 @@ cleanup-job:
   stage: cleanup
   needs: [run-job, test-job]
   script:
-    - docker compose -f docker-compose.yaml down
+    - docker compose -f docker-compose.yml down
     - docker container prune -f
     - docker volume prune -f
     - docker system prune -f
@@ -56,6 +56,6 @@ deploy-job:
   stage: deploy
   needs: [test-job]
   script:
-    - docker compose -f docker-compose.yaml build
-    - docker compose -f docker-compose.yaml up -d
+    - docker compose -f docker-compose.yml build
+    - docker compose -f docker-compose.yml up -d
   when: manual
