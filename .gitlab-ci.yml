@@ -8,17 +8,23 @@ stages:
 
 build-job:
   stage: build
+  environment:
+    name: dev
   script:
     - docker compose -f docker-compose.yml build
 
 run-job:
   stage: run
+  environment:
+    name: dev
   needs: [build-job]
   script:
     - docker compose -f docker-compose.yml up -d
 
 lint-test-job:
   stage: lint
+  environment:
+    name: dev
   needs: [run-job]
   script:
     - echo "Проверка форматирования кода с помощью ruff..."
@@ -35,6 +41,8 @@ lint-test-job:
 
 test-job:
   stage: test
+  environment:
+    name: dev
   needs: [lint-test-job]
   script:
     - echo "Начало тестирования"
@@ -43,6 +51,8 @@ test-job:
 
 cleanup-job:
   stage: cleanup
+  environment:
+    name: dev
   needs: [run-job, test-job]
   script:
     - docker compose -f docker-compose.yml down
@@ -54,6 +64,8 @@ cleanup-job:
 
 deploy-job:
   stage: deploy
+  environment:
+    name: dev
   needs: [test-job]
   script:
     - docker compose -f docker-compose.yml build
