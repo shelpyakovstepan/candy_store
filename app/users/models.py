@@ -14,6 +14,3 @@ class Users(Base):
     name: Mapped[str] = mapped_column(nullable=False)
     hashed_password: Mapped[str] = mapped_column(nullable=False)
     is_admin: Mapped[bool] = mapped_column(nullable=False, default=False)
-
-
-

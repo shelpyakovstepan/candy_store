@@ -1,6 +1,7 @@
-# THIRDPARTY
+# STDLIB
 import enum
 
+# THIRDPARTY
 from sqlalchemy import ForeignKey
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped, mapped_column
@@ -8,8 +9,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 # FIRSTPARTY
 from app.database import Base
 
+
 class CityEnum(enum.Enum):
     SAINT_PETERSBURG = "Saint-Petersburg"
+
 
 class Addresses(Base):
     __tablename__ = "addresses"

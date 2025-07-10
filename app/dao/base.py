@@ -1,4 +1,5 @@
-from sqlalchemy import delete, insert, select, update
+# THIRDPARTY
+from sqlalchemy import delete, insert, select
 
 # FIRSTPARTY
 from app.database import async_session_maker
@@ -41,3 +42,8 @@ class BaseDao:
             query = delete(cls.model).filter_by(**values)
             await session.execute(query)
             await session.commit()
+
+
+# pyright: reportArgumentType=false
+# pyright: reportCallIssue=false
+# pyright: reportAttributeAccessIssue=false

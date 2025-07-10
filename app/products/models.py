@@ -1,17 +1,19 @@
-# THIRDPARTY
+# STDLIB
 import enum
 from typing import List
 
-from sqlalchemy import JSON, Text, ARRAY, String
+# THIRDPARTY
+from sqlalchemy import ARRAY, String, Text
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped, mapped_column
 
 # FIRSTPARTY
 from app.database import Base
 
+
 class UnitEnum(enum.Enum):
-    PIECES = 'pieces'
-    KGS = 'kilograms'
+    PIECES = "pieces"
+    KGS = "kilograms"
 
 
 class Products(Base):
