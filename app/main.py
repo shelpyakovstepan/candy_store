@@ -1,16 +1,25 @@
 # THIRDPARTY
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
+
 from fastapi import APIRouter, FastAPI
 
-app = FastAPI()
+from app.database import check_db_connection
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    await check_db_connection()
+    yield
+app = FastAPI(lifespan=lifespan)
 
 router = APIRouter(
     prefix="/test",
     tags=["api"],
 )
 
-# app.include_router(router)
-
-
-@app.get("//")
+@router.get("//")
 async def ping():
     return {"data": "pong"}
+
+app.include_router(router)

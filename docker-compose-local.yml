@@ -2,10 +2,8 @@ services:
   db:
     image: postgres:17
     container_name: candy_store_db
-    environment:
-      POSTGRES_DB: "${POSTGRES_DB}"
-      POSTGRES_USER: "${POSTGRES_USER}"
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    env_file:
+      - .env-non-dev
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
@@ -21,14 +19,8 @@ services:
     build:
       context: .
     container_name: candy_store_app
-    environment:
-      MODE: "${MODE}"
-
-      DB_HOST: "${POSTGRES_HOST}"
-      DB_PORT: "${POSTGRES_PORT}"
-      DB_USER: "${POSTGRES_USER}"
-      DB_PASS: "${POSTGRES_PASSWORD}"
-      DB_NAME: "${POSTGRES_DB}"
+    env_file:
+      - .env-non-dev
     restart: always
     depends_on:
       db:
