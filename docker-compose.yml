@@ -1,0 +1,10 @@
+services:
+  daily_planner:
+    image: candy_store_image:latest
+    build:
+      context: .
+    container_name: candy_store_app
+    restart: always
+    command: [ "bash", "/candy_store/docker/app.sh" ]
+    ports:
+      - "7777:8000"

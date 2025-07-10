@@ -1,3 +1,4 @@
+# THIRDPARTY
 from fastapi import APIRouter, FastAPI
 
 app = FastAPI()
@@ -7,7 +8,8 @@ router = APIRouter(
     tags=["api"],
 )
 
-#app.include_router(router)
+# app.include_router(router)
+
 
 @app.get("//")
 async def ping():

@@ -1,31 +1,61 @@
-stages:         
+stages:
   - build
+  - run
+  - lint
   - test
+  - cleanup
   - deploy
 
 build-job:
   stage: build
   script:
-    - echo "Compiling the code..."
-    - echo "Compile complete."
+    - docker compose -f docker-compose.yaml build
 
-unit-test-job:
-  stage: test
+run-job:
+  stage: run
+  needs: [build-job]
   script:
-    - echo "Running unit tests... This will take about 60 seconds."
-    - sleep 60
-    - echo "Code coverage is 90%"
+    - docker compose -f docker-compose.yaml up -d
 
 lint-test-job:
-  stage: test
+  stage: lint
+  needs: [run-job]
   script:
-    - echo "Linting code... This will take about 10 seconds."
-    - sleep 10
-    - echo "No lint issues found."
+    - echo "Проверка форматирования кода с помощью ruff..."
+    - docker compose exec -it candy_store ruff format --config ruff.toml --check app tests
+
+    - echo "Проверка типов с помощью pyright..."
+    - docker compose exec -it candy_store pyright app tests
+
+    - echo "Проверка стиля кода с помощью ruff..."
+    - docker compose exec -it candy_store ruff check --config ruff.toml app tests
+
+    - echo "Проверка сортировки импортов с помощью isort..."
+    - docker compose exec -it candy_store isort --check-only --diff app tests
+
+test-job:
+  stage: test
+  needs: [lint-test-job]
+  script:
+    - echo "Начало тестирования"
+    - docker compose exec candy_store pytest -s -v
+
+
+cleanup-job:
+  stage: cleanup
+  needs: [run-job, test-job]
+  script:
+    - docker compose -f docker-compose.yaml down
+    - docker container prune -f
+    - docker volume prune -f
+    - docker system prune -f
+  when: always
+
 
 deploy-job:
   stage: deploy
-  environment: production
+  needs: [test-job]
   script:
-    - echo "Deploying application..."
-    - echo "Application successfully deployed."
+    - docker compose -f docker-compose.yaml build
+    - docker compose -f docker-compose.yaml up -d
+  when: manual
