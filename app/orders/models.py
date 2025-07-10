@@ -1,0 +1,41 @@
+# THIRDPARTY
+import enum
+from datetime import date, datetime
+
+import pytz
+from sqlalchemy import ForeignKey, Text
+from sqlalchemy.dialects import postgresql
+from sqlalchemy.orm import Mapped, mapped_column
+
+# FIRSTPARTY
+from app.database import Base
+
+class CityEnum(enum.Enum):
+    SAINT_PETERSBURG = "Saint-Petersburg"
+
+class ReceivingMethodEnum(enum.Enum):
+    PICKUP = "pickup"
+    DELIVERY = "delivery"
+
+class StatusEnum(enum.Enum):
+    WAITING = "waiting"
+    PREPARING = "preparing"
+    READY = "ready"
+    DELIVERY = "delivered"
+    COMPLETED = "completed"
+
+class PaymentMethodEnum(enum.Enum):
+    CASH = "cash"
+    NONCASH = "non-cash"
+
+class Orders(Base):
+    __tablename__ = "orders"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    created_at: Mapped[date] = mapped_column(default=datetime.now(pytz.timezone("Europe/Moscow")).date(), nullable=False)
+    cart_id: Mapped[int] = mapped_column(ForeignKey("carts.id"), nullable=False)
+    date_receiving: Mapped[date] = mapped_column(nullable=False)
+    receiving_method: Mapped[ReceivingMethodEnum] = mapped_column(postgresql.ENUM(ReceivingMethodEnum), nullable=False)
+    comment: Mapped[str] = mapped_column(Text)
+    payment: Mapped[PaymentMethodEnum] = mapped_column(postgresql.ENUM(PaymentMethodEnum), nullable=False)
+    status: Mapped[StatusEnum] = mapped_column(postgresql.ENUM(StatusEnum), nullable=False)
