@@ -42,3 +42,8 @@ class NotUserException(BaseAppException):
 
 class UserIsNotPresentException(BaseAppException):
     status_code = status.HTTP_401_UNAUTHORIZED
+
+
+class NotEnoughRightsException(BaseAppException):
+    status_code = status.HTTP_403_FORBIDDEN
+    detail = "Not enough rights"

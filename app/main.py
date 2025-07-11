@@ -7,6 +7,7 @@ from typing import AsyncIterator
 from fastapi import FastAPI, Request
 
 # FIRSTPARTY
+from app.admin.router import router as admins_router
 from app.database import check_db_connection
 from app.logger import logger
 from app.users.router import router as users_router
@@ -21,6 +22,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(users_router)
+app.include_router(admins_router)
 
 
 @app.middleware("http")
