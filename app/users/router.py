@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends, Response
 # FIRSTPARTY
 from app.exceptions import (
     IncorrectUserEmailOrPasswordException,
-    NotUserException,
     UserAlreadyExistsException,
 )
 from app.logger import logger
@@ -70,13 +69,3 @@ async def logout_user(response: Response):
     """Осуществляет выход пользователя из системы"""
     response.delete_cookie("access_token")
     logger.debug("User logged out")
-
-
-@router.patch("/admins")
-async def change_admin_status(user_id: int, admin_status: bool):
-    """Изменяет статус админа пользователя."""
-    user = await UserDAO.update_one(user_id, is_admin=admin_status)
-    if not user:
-        raise NotUserException
-
-    return user  # pyright: ignore [reportReturnType]

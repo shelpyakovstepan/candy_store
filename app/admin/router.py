@@ -6,8 +6,10 @@ from fastapi import APIRouter, Depends
 
 # FIRSTPARTY
 from app.admin.dependencies import check_admin_status
+from app.exceptions import NotUserException
 from app.logger import logger
 from app.products.dao import ProductsDAO
+from app.users.dao import UserDAO
 
 router = APIRouter(
     prefix="/admin",
@@ -40,3 +42,13 @@ async def add_product(
 
     logger.debug("Продукт успешно добавлен")
     return product
+
+
+@router.patch("/admins")
+async def change_admin_status(user_id: int, admin_status: bool):
+    """Изменяет статус админа пользователя."""
+    user = await UserDAO.update_one(user_id, is_admin=admin_status)
+    if not user:
+        raise NotUserException
+
+    return user  # pyright: ignore [reportReturnType]
