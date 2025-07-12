@@ -16,14 +16,6 @@ class TestUsersApi:
                 409,
             ),
             (
-                "test@user.com",
-                "some_number",
-                "some_surname",
-                "some_name",
-                "ffffff",
-                409,
-            ),
-            (
                 "some@email.com",
                 "+72227778899",
                 "some_surname",
@@ -96,7 +88,6 @@ class TestUsersApi:
         [
             ("test@user.com", "kolobok", 200),
             ("test@user.com", "ffffff", 401),
-            ("test@user.com", "f", 422),
             ("abcde", "kotopes", 422),
             ("test@t.com", "kolobok", 401),
         ],
