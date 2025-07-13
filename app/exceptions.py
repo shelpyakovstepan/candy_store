@@ -47,3 +47,8 @@ class UserIsNotPresentException(BaseAppException):
 class NotEnoughRightsException(BaseAppException):
     status_code = status.HTTP_403_FORBIDDEN
     detail = "Not enough rights"
+
+
+class NotProductException(BaseAppException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = "Not product"

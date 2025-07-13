@@ -8,7 +8,7 @@ from pydantic.v1 import parse_obj_as
 
 # FIRSTPARTY
 from app.admin.dependencies import check_admin_status
-from app.exceptions import NotUserException
+from app.exceptions import NotProductException, NotUserException
 from app.logger import logger
 from app.products.dao import ProductsDAO
 from app.products.schemas import SProducts, SUpdateProduct
@@ -53,16 +53,29 @@ async def update_product(
     updated_product_data: SUpdateProduct = Depends(),
 ) -> SProducts:
     stored_product = await ProductsDAO.find_one_or_none(id=product_id)
+    if not stored_product:
+        raise NotProductException
+
     stored_product_dict = parse_obj_as(SProducts, stored_product).model_dump()
     stored_product_model = SProducts(**stored_product_dict)
     update_data = updated_product_data.model_dump(exclude_defaults=True)
     updated_pr = stored_product_model.model_copy(update=update_data)
     updated_pr = jsonable_encoder(updated_pr)
     updated_pr["unit"] = updated_pr["unit"].upper()
+
     updated_product = await ProductsDAO.update(product_id, **updated_pr)
 
     logger.debug("Продукт успешно изменён")
     return updated_product  # pyright: ignore [reportReturnType]
+
+
+@router.delete("/")
+async def delete_product(product_id: int):
+    stored_product = await ProductsDAO.find_one_or_none(id=product_id)
+    if not stored_product:
+        raise NotProductException
+
+    await ProductsDAO.delete(id=product_id)
 
 
 @router.patch("/")
