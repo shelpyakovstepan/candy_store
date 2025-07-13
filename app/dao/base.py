@@ -45,7 +45,7 @@ class BaseDao:
             await session.commit()
 
     @classmethod
-    async def update_one(cls, model_id, **values):
+    async def update(cls, model_id, **values):
         async with async_session_maker() as session:
             query = (
                 update(cls.model)

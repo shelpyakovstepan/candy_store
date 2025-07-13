@@ -12,10 +12,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
 
 
-class CityEnum(enum.Enum):
-    SAINT_PETERSBURG = "Saint-Petersburg"
-
-
 class ReceivingMethodEnum(enum.Enum):
     PICKUP = "pickup"
     DELIVERY = "delivery"

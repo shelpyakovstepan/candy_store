@@ -15,9 +15,9 @@ from app.users.models import Users
 
 # @pytest.fixture(scope="session", autouse=True)
 # async def prepare_database():
-#  async with engine.begin() as connection:
-#      await connection.execute(text("DROP TABLE users CASCADE"))
-#      await connection.run_sync(Base.metadata.create_all)
+# async with engine.begin() as connection:
+#     await connection.execute(text("DROP TABLE products CASCADE"))
+#     await connection.run_sync(Base.metadata.create_all)
 
 
 @pytest.fixture(scope="function")
