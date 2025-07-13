@@ -7,6 +7,7 @@ from typing import AsyncIterator
 from fastapi import FastAPI, Request
 
 # FIRSTPARTY
+from app.addresses.router import router as addresses_router
 from app.admin.router import router as admins_router
 from app.database import check_db_connection
 from app.logger import logger
@@ -23,6 +24,7 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(users_router)
 app.include_router(admins_router)
+app.include_router(addresses_router)
 
 
 @app.middleware("http")

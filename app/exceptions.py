@@ -52,3 +52,13 @@ class NotEnoughRightsException(BaseAppException):
 class NotProductException(BaseAppException):
     status_code = status.HTTP_409_CONFLICT
     detail = "Not product"
+
+
+class NotAddressException(BaseAppException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = "Not address"
+
+
+class AddressAlreadyExistsException(BaseAppException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = "Address already exists"
