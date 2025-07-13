@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Depends, Response
 
 # FIRSTPARTY
+from app.carts.dao import CartsDAO
 from app.exceptions import (
     IncorrectUserEmailOrPasswordException,
     UserAlreadyExistsException,
@@ -32,7 +33,7 @@ async def register(user_data: SUsersRegister):
 
     hashed_password = get_password_hash(user_data.password)
 
-    await UserDAO.add(
+    new_user = await UserDAO.add(
         email=user_data.email,
         phone_number=user_data.phone_number,
         surname=user_data.surname,
@@ -40,7 +41,11 @@ async def register(user_data: SUsersRegister):
         hashed_password=hashed_password,
     )
 
-    logger.debug("User successfully registered")
+    logger.info("User successfully registered")
+
+    await CartsDAO.add(user_id=new_user.id)  # pyright: ignore [reportOptionalMemberAccess]
+
+    logger.info("Cart successfully added")
 
 
 @router.post("/login")
@@ -53,7 +58,7 @@ async def login(response: Response, user_data: SUsersLogin):
     access_token = create_access_token({"sub": str(user.id)})
     response.set_cookie("access_token", access_token, httponly=True)
 
-    logger.debug("User logged in")
+    logger.info("User logged in")
 
     return {"access_token": access_token}
 
@@ -68,4 +73,4 @@ async def get_me(user: Users = Depends(get_current_user)):
 async def logout_user(response: Response):
     """Осуществляет выход пользователя из системы"""
     response.delete_cookie("access_token")
-    logger.debug("User logged out")
+    logger.info("User logged out")

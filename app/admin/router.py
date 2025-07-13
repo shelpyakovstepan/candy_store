@@ -43,7 +43,7 @@ async def add_product(
         image_id=image_id,
     )
 
-    logger.debug("Продукт успешно добавлен")
+    logger.info("Продукт успешно добавлен")
     return product  # pyright: ignore [reportReturnType]
 
 
@@ -65,7 +65,7 @@ async def update_product(
 
     updated_product = await ProductsDAO.update(product_id, **updated_pr)
 
-    logger.debug("Продукт успешно изменён")
+    logger.info("Продукт успешно изменён")
     return updated_product  # pyright: ignore [reportReturnType]
 
 
@@ -75,6 +75,7 @@ async def delete_product(product_id: int):
     if not stored_product:
         raise NotProductException
 
+    logger.info("Продукт успешно удалён")
     await ProductsDAO.delete(id=product_id)
 
 

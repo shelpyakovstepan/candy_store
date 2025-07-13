@@ -10,4 +10,4 @@ class Carts(Base):
     __tablename__ = "carts"
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
-    total_price: Mapped[int] = mapped_column(nullable=False)
+    total_price: Mapped[int] = mapped_column(default=0)
