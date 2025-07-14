@@ -11,6 +11,7 @@ from app.addresses.router import router as addresses_router
 from app.admin.router import router as admins_router
 from app.database import check_db_connection
 from app.logger import logger
+from app.products.router import router as products_router
 from app.users.router import router as users_router
 
 
@@ -25,6 +26,8 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(users_router)
 app.include_router(admins_router)
 app.include_router(addresses_router)
+
+app.include_router(products_router)
 
 
 @app.middleware("http")

@@ -49,9 +49,9 @@ class NotEnoughRightsException(BaseAppException):
     detail = "Not enough rights"
 
 
-class NotProductException(BaseAppException):
+class NotProductsException(BaseAppException):
     status_code = status.HTTP_409_CONFLICT
-    detail = "Not product"
+    detail = "Not products"
 
 
 class NotAddressException(BaseAppException):

@@ -3,12 +3,10 @@ from typing import List, Literal
 
 # THIRDPARTY
 from fastapi import APIRouter, Depends
-from fastapi.encoders import jsonable_encoder
-from pydantic.v1 import parse_obj_as
 
 # FIRSTPARTY
 from app.admin.dependencies import check_admin_status
-from app.exceptions import NotProductException, NotUserException
+from app.exceptions import NotProductsException, NotUserException
 from app.logger import logger
 from app.products.dao import ProductsDAO
 from app.products.schemas import SProducts, SUpdateProduct
@@ -26,7 +24,7 @@ async def add_product(
     name: str,
     category: Literal["Торты", "Пряники"],
     ingredients: List[str],
-    unit: Literal["PIECES", "KGS"],
+    unit: Literal["PIECES", "KILOGRAMS"],
     price: int,
     min_quantity: int,
     description: str,
@@ -54,16 +52,9 @@ async def update_product(
 ) -> SProducts:
     stored_product = await ProductsDAO.find_one_or_none(id=product_id)
     if not stored_product:
-        raise NotProductException
+        raise NotProductsException
 
-    stored_product_dict = parse_obj_as(SProducts, stored_product).model_dump()
-    stored_product_model = SProducts(**stored_product_dict)
-    update_data = updated_product_data.model_dump(exclude_defaults=True)
-    updated_pr = stored_product_model.model_copy(update=update_data)
-    updated_pr = jsonable_encoder(updated_pr)
-    updated_pr["unit"] = updated_pr["unit"].upper()
-
-    updated_product = await ProductsDAO.update(product_id, **updated_pr)
+    updated_product = await ProductsDAO.update_product(product_id, updated_product_data)
 
     logger.info("Продукт успешно изменён")
     return updated_product  # pyright: ignore [reportReturnType]
@@ -73,7 +64,7 @@ async def update_product(
 async def delete_product(product_id: int):
     stored_product = await ProductsDAO.find_one_or_none(id=product_id)
     if not stored_product:
-        raise NotProductException
+        raise NotProductsException
 
     logger.info("Продукт успешно удалён")
     await ProductsDAO.delete(id=product_id)

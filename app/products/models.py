@@ -13,7 +13,7 @@ from app.database import Base
 
 class UnitEnum(enum.Enum):
     PIECES = "pieces"
-    KGS = "kilograms"
+    KILOGRAMS = "kilograms"
 
 
 class Products(Base):
