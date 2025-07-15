@@ -1,6 +1,11 @@
+# STDLIB
+import math
+from typing import Optional
+
 # THIRDPARTY
 from fastapi.encoders import jsonable_encoder
-from pydantic import parse_obj_as
+from fastapi_filter.contrib.sqlalchemy import Filter
+from pydantic import Field, parse_obj_as
 from sqlalchemy import select, update
 
 # FIRSTPARTY
@@ -8,6 +13,15 @@ from app.dao.base import BaseDao
 from app.database import async_session_maker
 from app.products.models import Products
 from app.products.schemas import SProducts, SUpdateProduct
+
+
+class ProductsFilter(Filter):
+    name__in: Optional[list[str]] = Field(default=None)
+    category__in: Optional[list[str]] = Field(default=None)
+    price__lte: Optional[int] = Field(default=None)
+
+    class Constants(Filter.Constants):
+        model = Products
 
 
 class ProductsDAO(BaseDao):
@@ -46,11 +60,22 @@ class ProductsDAO(BaseDao):
     @classmethod
     async def find_all(  # pyright: ignore [reportIncompatibleMethodOverride]
         cls,
-        limit: int,
-        offset: int,
+        page: int,
+        page_size: int,
+        products_filter: ProductsFilter,
     ):
         async with async_session_maker() as session:
-            products_query = select(Products).limit(limit).offset(offset)
-            products = await session.execute(products_query)
-
-            return products.scalars().all()
+            offset_min = (page - 1) * page_size
+            query_filter = products_filter.filter(select(Products))
+            filtered_data = await session.execute(
+                query_filter.offset(offset_min).limit(page_size)
+            )
+            filtered_data = filtered_data.scalars().all()
+            response = filtered_data + [  # pyright: ignore [reportOperatorIssue]
+                {
+                    "page": page,
+                    "size": page_size,
+                    "total": math.ceil(len(filtered_data) / page_size),
+                }
+            ]
+            return response
