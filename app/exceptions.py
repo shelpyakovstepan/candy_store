@@ -62,3 +62,23 @@ class NotAddressException(BaseAppException):
 class AddressAlreadyExistsException(BaseAppException):
     status_code = status.HTTP_409_CONFLICT
     detail = "Address already exists"
+
+
+class NotCartException(BaseAppException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = "Not cart"
+
+
+class NotTrueProductsQuantityException(BaseAppException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = "Not true products quantity"
+
+
+class NotCartsItemException(BaseAppException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = "Not cart's item"
+
+
+class CartsItemsAlreadyExistsException(BaseAppException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = "Cart's items already exists"

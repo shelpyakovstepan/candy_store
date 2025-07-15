@@ -16,6 +16,7 @@ class SProducts(BaseModel):
     unit: Literal[UnitEnum.PIECES, UnitEnum.KILOGRAMS]
     price: int
     min_quantity: int
+    max_quantity: int
     description: str
     image_id: int
 
@@ -30,6 +31,7 @@ class SUpdateProduct(BaseModel):
     unit: Optional[Literal["PIECES", "KILOGRAMS"]] = None
     price: Optional[int] = None
     min_quantity: Optional[int] = None
+    max_quantity: Optional[int] = None
     description: Optional[str] = None
     image_id: Optional[int] = None
 

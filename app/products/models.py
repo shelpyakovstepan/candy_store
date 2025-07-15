@@ -25,5 +25,6 @@ class Products(Base):
     unit: Mapped[UnitEnum] = mapped_column(postgresql.ENUM(UnitEnum), nullable=False)
     price: Mapped[int] = mapped_column(nullable=False)
     min_quantity: Mapped[int] = mapped_column(nullable=False)
+    max_quantity: Mapped[int] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    image_id: Mapped[int] = mapped_column()
+    image_id: Mapped[int]

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 
 # FIRSTPARTY
 from app.admin.dependencies import check_admin_status
+from app.cartsItems.dao import CartsItemsDAO
 from app.exceptions import NotProductsException, NotUserException
 from app.logger import logger
 from app.products.dao import ProductsDAO
@@ -27,6 +28,7 @@ async def add_product(
     unit: Literal["PIECES", "KILOGRAMS"],
     price: int,
     min_quantity: int,
+    max_quantity: int,
     description: str,
     image_id: int,
 ) -> SProducts:
@@ -37,6 +39,7 @@ async def add_product(
         unit=unit,
         price=price,
         min_quantity=min_quantity,
+        max_quantity=max_quantity,
         description=description,
         image_id=image_id,
     )
@@ -66,8 +69,9 @@ async def delete_product(product_id: int):
     if not stored_product:
         raise NotProductsException
 
-    logger.info("Продукт успешно удалён")
+    await CartsItemsDAO.delete(product_id=product_id)
     await ProductsDAO.delete(id=product_id)
+    logger.info("Продукт успешно удалён")
 
 
 @router.patch("/")
@@ -78,3 +82,12 @@ async def change_admin_status(user_id: int, admin_status: bool):
         raise NotUserException
 
     return user  # pyright: ignore [reportReturnType]
+
+
+# @router.patch("///")
+# async def update_cart_total_price(cart_id: int):
+#    cart = await CartsDAO.find_one_or_none(id=cart_id)
+#    if not cart:
+#        raise NotCartException
+#    updated_cart = await CartsDAO.update(model_id=cart_id, total_price=0)
+#    return updated_cart
