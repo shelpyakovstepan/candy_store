@@ -26,3 +26,11 @@ async def get_products(
         raise NotProductsException
 
     return products
+
+
+@router.get("/{product_id}")
+async def get_product_by_id(product_id: int):
+    product = await ProductsDAO.find_by_id(product_id)
+    if not product:
+        raise NotProductsException
+    return product
