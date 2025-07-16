@@ -48,6 +48,13 @@ async def add_cart_item(
     return cart_item
 
 
+@router.get("/")
+async def get_all_cart_items(cart: Carts = Depends(get_users_cart)):
+    cart_items = await CartsItemsDAO.find_all(cart_id=cart.id)
+
+    return cart_items + [{"price": cart.total_price}]  # pyright: ignore [reportOperatorIssue]
+
+
 @router.patch("/update")
 async def update_cart_item(
     cart_item_id: int,

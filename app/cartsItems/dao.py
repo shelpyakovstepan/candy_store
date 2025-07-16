@@ -27,6 +27,7 @@ class CartsItemsDAO(BaseDao):
             )
             add_new_carts_item = await session.execute(add_new_carts_item_query)
             await session.commit()
+            add_new_carts_item = add_new_carts_item.scalar()
 
             price = (
                 select(Products.price)
@@ -42,9 +43,10 @@ class CartsItemsDAO(BaseDao):
             )
             update_cart_total_price = await session.execute(update_cart_total_price)
             await session.commit()
-            return add_new_carts_item.scalars().all() + [  # pyright: ignore [reportOperatorIssue]
-                {"price": update_cart_total_price.scalar()}
-            ]
+            add_new_carts_item.total_cart_price = (  # pyright: ignore [reportAttributeAccessIssue]
+                update_cart_total_price.scalar()
+            )
+            return add_new_carts_item  # pyright: ignore [reportOperatorIssue]
 
     @classmethod
     async def update_carts_item(
@@ -152,9 +154,12 @@ class CartsItemsDAO(BaseDao):
             update_cart_total_price = await session.execute(update_cart_total_price)
             await session.commit()
 
-            return {"total_cart_price": update_cart_total_price.scalar()}
+            delete_cart_item.total_cart_price = update_cart_total_price.scalar()
+
+            return {"total_cart_price": delete_cart_item.total_cart_price}
 
 
 # pyright: reportOptionalMemberAccess=false
 # pyright: reportOptionalOperand=false
 # pyright: reportPossiblyUnboundVariable=false
+# pyright: reportAttributeAccessIssue=false
