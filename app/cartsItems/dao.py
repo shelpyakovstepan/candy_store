@@ -1,5 +1,5 @@
 # THIRDPARTY
-from sqlalchemy import insert, select, update
+from sqlalchemy import delete, insert, select, update
 
 # FIRSTPARTY
 from app.carts.models import Carts
@@ -64,8 +64,8 @@ class CartsItemsDAO(BaseDao):
                 update_cart_item_quantity = await session.execute(
                     update_cart_item_quantity_query
                 )
-                update_cart_item_quantity = update_cart_item_quantity.scalar()
                 await session.commit()
+                update_cart_item_quantity = update_cart_item_quantity.scalar()
 
                 price = (
                     select(Products.price)
@@ -92,8 +92,8 @@ class CartsItemsDAO(BaseDao):
                 update_cart_item_quantity = await session.execute(
                     update_cart_item_quantity_query
                 )
-                update_cart_item_quantity = update_cart_item_quantity.scalar()
                 await session.commit()
+                update_cart_item_quantity = update_cart_item_quantity.scalar()
 
                 price = (
                     select(Products.price)
@@ -117,6 +117,42 @@ class CartsItemsDAO(BaseDao):
                 update_cart_total_price.scalar()
             )
             return update_cart_item_quantity
+
+    @classmethod
+    async def delete_carts_item(
+        cls,
+        cart_item_id: int,
+    ):
+        async with async_session_maker() as session:
+            delete_cart_item_query = (
+                delete(CartsItems)
+                .where(CartsItems.id == cart_item_id)
+                .returning(CartsItems)
+            )
+            delete_cart_item = await session.execute(delete_cart_item_query)
+            await session.commit()
+            delete_cart_item = delete_cart_item.scalar()
+
+            price = (
+                select(Products.price)
+                .select_from(Products)
+                .where(Products.id == delete_cart_item.product_id)
+            )
+            price = await session.execute(price)
+            update_cart_total_price = (
+                update(Carts)
+                .where(Carts.id == delete_cart_item.cart_id)
+                .values(
+                    total_price=(
+                        Carts.total_price - (price.scalar() * delete_cart_item.quantity)
+                    )
+                )
+                .returning(Carts.total_price)
+            )
+            update_cart_total_price = await session.execute(update_cart_total_price)
+            await session.commit()
+
+            return {"total_cart_price": update_cart_total_price.scalar()}
 
 
 # pyright: reportOptionalMemberAccess=false

@@ -75,3 +75,12 @@ async def update_cart_item(
         quantity=quantity,
     )
     return updated_cart_item
+
+
+@router.delete("/delete/{cart_item_id}")
+async def delete_cart_item(cart_item_id: int, cart: Carts = Depends(get_users_cart)):
+    cart_item = await CartsItemsDAO.find_one_or_none(id=cart_item_id, cart_id=cart.id)
+    if not cart_item:
+        raise NotCartsItemException
+    total_cart_price = await CartsItemsDAO.delete_carts_item(cart_item_id=cart_item_id)
+    return total_cart_price
