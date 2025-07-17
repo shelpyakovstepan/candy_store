@@ -1,23 +1,40 @@
 # STDLIB
+from datetime import datetime
 from typing import AsyncGenerator
 
 # THIRDPARTY
 import httpx
 from httpx import AsyncClient
 import pytest
-from sqlalchemy import delete
+from sqlalchemy import and_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # FIRSTPARTY
+from app.addresses.models import Addresses, CityEnum
+from app.carts.models import Carts
+from app.cartsItems.models import CartsItems
 from app.database import async_session_maker
 from app.main import app as fastapi_app
+from app.orders.models import (
+    Orders,
+    PaymentMethodEnum,
+    ReceivingMethodEnum,
+    StatusEnum,
+)
+from app.products.models import Products, UnitEnum
 from app.users.models import Users
 
 # @pytest.fixture(scope="session", autouse=True)
 # async def prepare_database():
-# async with engine.begin() as connection:
-#     await connection.execute(text("DROP TABLE products CASCADE"))
-#     await connection.run_sync(Base.metadata.create_all)
+#    async with engine.begin() as connection:
+#        await connection.execute(text("DROP TABLE addresses CASCADE"))
+#        query = delete(CartsItems)
+#        await connection.execute(query)
+#        await connection.execute(text("DROP TABLE products CASCADE"))
+#        await connection.execute(text("DROP TABLE carts CASCADE"))
+#        await connection.execute(text("DROP TABLE orders CASCADE"))
+#        await connection.execute(text("DROP TABLE users CASCADE"))
+#        await connection.run_sync(Base.metadata.create_all)
 
 
 @pytest.fixture(scope="function")
@@ -35,7 +52,7 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
             await t_session.rollback()
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture
 async def create_user(
     get_session: AsyncSession,
 ) -> AsyncGenerator[Users, None]:
@@ -69,10 +86,290 @@ async def create_user(
 
     yield user
 
-    # query = delete(ActivityModel).where(ActivityModel.user_id == id_)
-    # await get_session.execute(query)
-    query = delete(Users).where(Users.id == id_)
+    delete_orders_query = delete(Orders).where(and_(Orders.user_id == id_))
+    await get_session.execute(delete_orders_query)
+
+    delete_carts_items_query = delete(CartsItems).where(CartsItems.cart_id == 222222)
+    await get_session.execute(delete_carts_items_query)
+
+    delete_cart_query = delete(Carts).where(Carts.user_id == id_)
+    await get_session.execute(delete_cart_query)
+
+    delete_address_query = delete(Addresses).where(Addresses.user_id == id_)
+    await get_session.execute(delete_address_query)
+
+    query = delete(Users).where(
+        and_(
+            Users.id == id_,
+            Users.email == email,
+            Users.phone_number == phone_number,
+            Users.surname == surname,
+            Users.name == name,
+            Users.hashed_password == hashed_password,
+            Users.is_admin == is_admin,
+        )
+    )
     await get_session.execute(query)
+    await get_session.commit()
+
+
+@pytest.fixture
+async def create_address(
+    get_session: AsyncSession,
+    create_user: Users,
+) -> AsyncGenerator[Addresses, None]:
+    """Фикстура для создания тестового адреса пользователя в БД.
+
+    Args:
+        get_session (AsyncSession): Асинхронная сессия базы данных
+        create_user: Экземпляр модели Users
+
+    Returns:
+        Addresses: Экземпляр модели Addresses, представляющий созданный
+        адрес
+    """
+    id_ = 222222
+    user_id = 222222
+    city = CityEnum.SAINT_PETERSBURG
+    street = "Невский проспект"
+    house = 1
+    building = 1
+    flat = 1
+    entrance = 1
+
+    address = Addresses(
+        id=id_,
+        user_id=user_id,
+        city=city,
+        street=street,
+        house=house,
+        building=building,
+        flat=flat,
+        entrance=entrance,
+    )
+
+    get_session.add(address)
+    await get_session.commit()
+
+    yield address
+
+    query = delete(Addresses).where(
+        and_(
+            Addresses.id == id_,
+            Addresses.user_id == user_id,
+            Addresses.city == city,
+            Addresses.street == street,
+            Addresses.house == house,
+            Addresses.building == building,
+            Addresses.flat == flat,
+            Addresses.entrance == entrance,
+        )
+    )
+    await get_session.execute(query)
+    await get_session.commit()
+
+
+@pytest.fixture
+async def create_cart(
+    get_session: AsyncSession,
+    create_user: Users,
+) -> AsyncGenerator[Carts, None]:
+    """Фикстура для создания тестовой корзины в БД.
+
+    Args:
+        get_session (AsyncSession): Асинхронная сессия базы данных
+        create_user: Экземпляр модели Users
+
+    Returns:
+        Carts: Экземпляр модели Carts, представляющий созданную
+        корзину
+    """
+    id_ = 222222
+    user_id = 222222
+    total_price = 5000
+
+    cart = Carts(
+        id=id_,
+        user_id=user_id,
+        total_price=total_price,
+    )
+
+    get_session.add(cart)
+    await get_session.commit()
+
+    yield cart
+
+    delete_carts_items_query = delete(CartsItems).where(CartsItems.cart_id == id_)
+    await get_session.execute(delete_carts_items_query)
+
+    delete_orders_query = delete(Orders).where(and_(Orders.user_id == id_))
+    await get_session.execute(delete_orders_query)
+
+    query = delete(Carts).where(
+        and_(
+            Carts.id == id_, Carts.user_id == user_id, Carts.total_price == total_price
+        )
+    )
+    await get_session.execute(query)
+    await get_session.commit()
+
+
+@pytest.fixture
+async def create_product(
+    get_session: AsyncSession,
+) -> AsyncGenerator[Products, None]:
+    """Фикстура для создания тестового продукта в БД.
+
+    Args:
+        get_session (AsyncSession): Асинхронная сессия базы данных
+
+    Returns:
+        Products: Экземпляр модели Products, представляющий созданный
+        продукт
+    """
+    id_ = 222222
+    name = "Торт обычный"
+    category = "Торты"
+    ingredients = ["Шоколад", "Ягоды"]
+    unit = UnitEnum.KILOGRAMS
+    price = 2500
+    min_quantity = 2
+    max_quantity = 6
+    description = "Какой то тортик"
+    image_id = 1
+
+    product = Products(
+        id=id_,
+        name=name,
+        category=category,
+        ingredients=ingredients,
+        unit=unit,
+        price=price,
+        min_quantity=min_quantity,
+        max_quantity=max_quantity,
+        description=description,
+        image_id=image_id,
+    )
+
+    get_session.add(product)
+    await get_session.commit()
+
+    yield product
+
+    delete_carts_items_query = delete(CartsItems).where(CartsItems.product_id == id_)
+    await get_session.execute(delete_carts_items_query)
+    query = delete(Products).where(
+        and_(
+            Products.id == id_,
+            Products.category == category,
+            Products.name == name,
+            Products.ingredients == ingredients,
+            Products.unit == unit,
+            Products.price == price,
+            Products.min_quantity == min_quantity,
+            Products.max_quantity == max_quantity,
+            Products.description == description,
+            Products.image_id == image_id,
+        )
+    )
+    await get_session.execute(query)
+    await get_session.commit()
+
+
+@pytest.fixture
+async def create_carts_item(
+    get_session: AsyncSession,
+    create_cart: Carts,
+) -> AsyncGenerator[CartsItems, None]:
+    """Фикстура для создания тестового товара в корзине в БД.
+
+    Args:
+        get_session (AsyncSession): Асинхронная сессия базы данных
+        create_cart: Экземпляр модели Carts
+
+    Returns:
+        CartsItems: Экземпляр модели CartsItems, представляющий созданный
+        товар в корзине
+    """
+    id_ = 222222
+    product_id = 222222
+    cart_id = 222222
+    quantity = 3
+
+    carts_item = CartsItems(
+        id=id_,
+        product_id=product_id,
+        cart_id=cart_id,
+        quantity=quantity,
+    )
+
+    get_session.add(carts_item)
+    await get_session.commit()
+
+    yield carts_item
+
+    query = delete(CartsItems).where(
+        CartsItems.id == id_,
+        CartsItems.product_id == id_,
+        CartsItems.cart_id == cart_id,
+        CartsItems.quantity == quantity,
+    )
+    await get_session.execute(query)
+
+    await get_session.commit()
+
+
+@pytest.fixture
+async def create_order(
+    get_session: AsyncSession,
+    create_cart: Carts,
+) -> AsyncGenerator[Orders, None]:
+    """Фикстура для создания тестовой корзины в БД.
+
+    Args:
+        get_session (AsyncSession): Асинхронная сессия базы данных
+        create_cart: Экземпляр модели Carts
+
+    Returns:
+        Orders: Экземпляр модели Orders, представляющий созданную
+        корзину
+    """
+    id_ = 222222
+    user_id = 222222
+    created_at = datetime.strptime("2025-07-17", "%Y-%m-%d")
+    cart_id = 222222
+    address = 222222
+    date_receiving = datetime.strptime("2025-07-21", "%Y-%m-%d")
+    time_receiving = datetime.strptime("12:00", "%H:%M").time()
+    receiving_method = ReceivingMethodEnum.PICKUP
+    comment = "Comment"
+    payment = PaymentMethodEnum.NONCASH
+    total_price = 5000
+    status = StatusEnum.WAITING
+
+    order = Orders(
+        id=id_,
+        user_id=user_id,
+        created_at=created_at,
+        cart_id=cart_id,
+        address=address,
+        date_receiving=date_receiving,
+        time_receiving=time_receiving,
+        receiving_method=receiving_method,
+        comment=comment,
+        payment=payment,
+        total_price=total_price,
+        status=status,
+    )
+
+    get_session.add(order)
+    await get_session.commit()
+
+    yield order
+
+    delete_orders_query = delete(Orders).where(and_(Orders.id == id_))
+    await get_session.execute(delete_orders_query)
+
     await get_session.commit()
 
 

@@ -68,7 +68,15 @@ class TestUsersApi:
         ],
     )
     async def test_register_user(
-        self, email, phone_number, surname, name, password, status_code, ac: AsyncClient
+        self,
+        email,
+        phone_number,
+        surname,
+        name,
+        password,
+        status_code,
+        ac: AsyncClient,
+        create_user,
     ):
         response = await ac.post(
             "/auth/register",
@@ -92,7 +100,9 @@ class TestUsersApi:
             ("test@t.com", "kolobok", 401),
         ],
     )
-    async def test_login_user(self, email, password, status_code, ac: AsyncClient):
+    async def test_login_user(
+        self, email, password, status_code, ac: AsyncClient, create_user
+    ):
         response = await ac.post(
             "/auth/login", json={"email": email, "password": password}
         )
@@ -107,6 +117,7 @@ class TestUsersApi:
         self,
         status_code_for_unauthorized_user,
         status_code_for_authorized_user,
+        create_user,
         ac: AsyncClient,
         authenticated_ac: AsyncClient,
     ):

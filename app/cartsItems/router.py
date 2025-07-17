@@ -56,7 +56,7 @@ async def get_all_cart_items(cart: Carts = Depends(get_users_cart)):
 
 
 @router.patch("/update")
-async def update_cart_item(
+async def update_carts_items_quantity(
     cart_item_id: int,
     action: Literal["reduce", "increase"],
     quantity: int = Query(gt=0),
@@ -84,10 +84,10 @@ async def update_cart_item(
     return updated_cart_item
 
 
-@router.delete("/delete/{cart_item_id}")
-async def delete_cart_item(cart_item_id: int, cart: Carts = Depends(get_users_cart)):
-    cart_item = await CartsItemsDAO.find_one_or_none(id=cart_item_id, cart_id=cart.id)
+@router.delete("/delete/{carts_item_id}")
+async def delete_carts_item(carts_item_id: int, cart: Carts = Depends(get_users_cart)):
+    cart_item = await CartsItemsDAO.find_one_or_none(id=carts_item_id, cart_id=cart.id)
     if not cart_item:
         raise NotCartsItemException
-    total_cart_price = await CartsItemsDAO.delete_carts_item(cart_item_id=cart_item_id)
+    total_cart_price = await CartsItemsDAO.delete_carts_item(cart_item_id=carts_item_id)
     return total_cart_price
