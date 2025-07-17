@@ -70,7 +70,7 @@ class NotCartException(BaseAppException):
 
 
 class NotTrueProductsQuantityException(BaseAppException):
-    status_code = status.HTTP_409_CONFLICT
+    status_code = status.HTTP_400_BAD_REQUEST
     detail = "Not true products quantity"
 
 
@@ -82,3 +82,28 @@ class NotCartsItemException(BaseAppException):
 class CartsItemsAlreadyExistsException(BaseAppException):
     status_code = status.HTTP_409_CONFLICT
     detail = "Cart's items already exists"
+
+
+class NotTrueTimeException(BaseAppException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    detail = "Not true time"
+
+
+class YouCanNotChooseThisPaymentException(BaseAppException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    detail = "You can't choose this payment"
+
+
+class YouCanNotAddNewOrderException(BaseAppException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = "You can't add new order"
+
+
+class YouCanNotOrderByThisId(BaseAppException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = "You can't order by this id"
+
+
+class YouDoNotHaveOrdersException(BaseAppException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = "You don't have any orders"

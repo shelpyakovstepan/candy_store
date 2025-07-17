@@ -12,6 +12,7 @@ from app.admin.router import router as admins_router
 from app.cartsItems.router import router as carts_items_router
 from app.database import check_db_connection
 from app.logger import logger
+from app.orders.router import router as orders_router
 from app.products.router import router as products_router
 from app.users.router import router as users_router
 
@@ -31,6 +32,8 @@ app.include_router(addresses_router)
 app.include_router(products_router)
 
 app.include_router(carts_items_router)
+
+app.include_router(orders_router)
 
 
 @app.middleware("http")

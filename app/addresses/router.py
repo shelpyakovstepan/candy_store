@@ -40,6 +40,17 @@ async def create_address(
     return address
 
 
+@router.get("/get")
+async def get_address(
+    user: Users = Depends(get_current_user),
+):
+    address = await AddressesDAO.find_one_or_none(user_id=user.id)
+    if not address:
+        raise NotAddressException
+
+    return address
+
+
 @router.put("/")
 async def update_address(
     street: str,

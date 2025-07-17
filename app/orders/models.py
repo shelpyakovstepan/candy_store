@@ -1,5 +1,5 @@
 # STDLIB
-from datetime import date, datetime
+from datetime import date, datetime, time
 import enum
 
 # THIRDPARTY
@@ -38,7 +38,9 @@ class Orders(Base):
         default=datetime.now(pytz.timezone("Europe/Moscow")).date(), nullable=False
     )
     cart_id: Mapped[int] = mapped_column(ForeignKey("carts.id"), nullable=False)
+    address: Mapped[int] = mapped_column(ForeignKey("addresses.id"))
     date_receiving: Mapped[date] = mapped_column(nullable=False)
+    time_receiving: Mapped[time] = mapped_column(nullable=False)
     receiving_method: Mapped[ReceivingMethodEnum] = mapped_column(
         postgresql.ENUM(ReceivingMethodEnum), nullable=False
     )
@@ -46,6 +48,7 @@ class Orders(Base):
     payment: Mapped[PaymentMethodEnum] = mapped_column(
         postgresql.ENUM(PaymentMethodEnum), nullable=False
     )
+    total_price: Mapped[int] = mapped_column(nullable=False)
     status: Mapped[StatusEnum] = mapped_column(
         postgresql.ENUM(StatusEnum), nullable=False
     )
