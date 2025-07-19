@@ -1,0 +1,101 @@
+# STDLIB
+from datetime import datetime
+
+# THIRDPARTY
+import pytest
+
+# FIRSTPARTY
+from app.orders.dao import OrdersDAO
+
+
+class TestOrdersDAO:
+    @pytest.mark.parametrize(
+        "cart_id, date_receiving, time_receiving, receiving_method, payment, comment",
+        [(222222, "2100-01-01", "12:00", "PICKUP", "CASH", "comment")],
+    )
+    async def test_orders_add(
+        self,
+        create_address,
+        create_product,
+        create_carts_item,
+        cart_id,
+        date_receiving,
+        time_receiving,
+        receiving_method,
+        payment,
+        comment,
+    ):
+        date_receiving = datetime.strptime(date_receiving, "%Y-%m-%d").date()
+        time_receiving = datetime.strptime(time_receiving, "%H:%M").time()
+
+        order = await OrdersDAO.add(
+            user_id=create_address.user_id,
+            cart_id=cart_id,
+            address=create_address.id,
+            date_receiving=date_receiving,
+            time_receiving=time_receiving,
+            receiving_method=receiving_method,
+            payment=payment,
+            comment=comment,
+        )
+
+        assert order is not None
+        assert order.user_id == create_address.user_id
+        assert order.cart_id == cart_id
+        assert order.address == create_address.id
+        assert order.date_receiving == date_receiving
+        assert order.time_receiving == time_receiving
+        assert order.comment == comment
+
+    @pytest.mark.parametrize("user_id, exists", [(333333, False), (222222, True)])
+    async def test_orders_find_all(
+        self,
+        create_address,
+        create_product,
+        create_carts_item,
+        create_order,
+        user_id,
+        exists,
+    ):
+        orders = await OrdersDAO.find_all(user_id=user_id)
+
+        if exists:
+            assert orders is not None
+        else:
+            assert not orders
+
+    @pytest.mark.parametrize(
+        "user_id, cart_id, status, exists",
+        [
+            (333333, 333333, "WAITING", False),
+            (222222, 222222, "WAITING", True),
+        ],
+    )
+    async def test_orders_find_one_or_none(
+        self,
+        create_address,
+        create_product,
+        create_carts_item,
+        create_order,
+        user_id,
+        cart_id,
+        status,
+        exists,
+    ):
+        order = await OrdersDAO.find_one_or_none(
+            user_id=user_id, cart_id=cart_id, status=status
+        )
+
+        if exists:
+            assert order is not None
+            assert order.user_id == create_address.user_id
+            assert order.cart_id == create_carts_item.cart_id
+        else:
+            assert not order
+
+    async def test_orders_delete(
+        self, create_address, create_product, create_carts_item, create_order
+    ):
+        await OrdersDAO.delete(id=create_order.id)
+
+        assert await OrdersDAO.find_by_id(create_order.id) is None

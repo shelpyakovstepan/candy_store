@@ -26,15 +26,15 @@ from app.users.models import Users
 
 # @pytest.fixture(scope="session", autouse=True)
 # async def prepare_database():
-#    async with engine.begin() as connection:
-#        await connection.execute(text("DROP TABLE addresses CASCADE"))
-#        query = delete(CartsItems)
-#        await connection.execute(query)
-#        await connection.execute(text("DROP TABLE products CASCADE"))
-#        await connection.execute(text("DROP TABLE carts CASCADE"))
-#        await connection.execute(text("DROP TABLE orders CASCADE"))
-#        await connection.execute(text("DROP TABLE users CASCADE"))
-#        await connection.run_sync(Base.metadata.create_all)
+#   async with engine.begin() as connection:
+#       await connection.execute(text("DROP TABLE orders CASCADE"))
+#       await connection.execute(text("DROP TABLE addresses CASCADE"))
+#       query = delete(CartsItems)
+#       await connection.execute(query)
+#       await connection.execute(text("DROP TABLE products CASCADE"))
+#       await connection.execute(text("DROP TABLE carts CASCADE"))
+#       await connection.execute(text("DROP TABLE users CASCADE"))
+#       await connection.run_sync(Base.metadata.create_all)
 
 
 @pytest.fixture(scope="function")
@@ -71,7 +71,7 @@ async def create_user(
     surname = "Surname"
     name = "Name"
     hashed_password = "$2b$12$hTdYOVyjy.GCmFP2ArKncuG5Hg5Vlwh0qovYYNp10VRMc5129FmO6"
-    is_admin = False
+    is_admin = True
     user = Users(
         id=id_,
         email=email,
@@ -101,12 +101,6 @@ async def create_user(
     query = delete(Users).where(
         and_(
             Users.id == id_,
-            Users.email == email,
-            Users.phone_number == phone_number,
-            Users.surname == surname,
-            Users.name == name,
-            Users.hashed_password == hashed_password,
-            Users.is_admin == is_admin,
         )
     )
     await get_session.execute(query)
@@ -156,13 +150,6 @@ async def create_address(
     query = delete(Addresses).where(
         and_(
             Addresses.id == id_,
-            Addresses.user_id == user_id,
-            Addresses.city == city,
-            Addresses.street == street,
-            Addresses.house == house,
-            Addresses.building == building,
-            Addresses.flat == flat,
-            Addresses.entrance == entrance,
         )
     )
     await get_session.execute(query)
@@ -205,11 +192,7 @@ async def create_cart(
     delete_orders_query = delete(Orders).where(and_(Orders.user_id == id_))
     await get_session.execute(delete_orders_query)
 
-    query = delete(Carts).where(
-        and_(
-            Carts.id == id_, Carts.user_id == user_id, Carts.total_price == total_price
-        )
-    )
+    query = delete(Carts).where(and_(Carts.id == id_))
     await get_session.execute(query)
     await get_session.commit()
 
@@ -261,15 +244,6 @@ async def create_product(
     query = delete(Products).where(
         and_(
             Products.id == id_,
-            Products.category == category,
-            Products.name == name,
-            Products.ingredients == ingredients,
-            Products.unit == unit,
-            Products.price == price,
-            Products.min_quantity == min_quantity,
-            Products.max_quantity == max_quantity,
-            Products.description == description,
-            Products.image_id == image_id,
         )
     )
     await get_session.execute(query)
@@ -310,9 +284,6 @@ async def create_carts_item(
 
     query = delete(CartsItems).where(
         CartsItems.id == id_,
-        CartsItems.product_id == id_,
-        CartsItems.cart_id == cart_id,
-        CartsItems.quantity == quantity,
     )
     await get_session.execute(query)
 
