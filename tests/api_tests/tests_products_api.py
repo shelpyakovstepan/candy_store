@@ -10,7 +10,9 @@ class TestProductsApi:
             (1, 5),
         ],
     )
-    async def test_get_products(self, create_product, page, page_size, ac: AsyncClient):
+    async def test_get_products(
+        self, get_redis, create_product, page, page_size, ac: AsyncClient
+    ):
         response = await ac.get(
             "/products/",
             params={

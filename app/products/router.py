@@ -1,5 +1,6 @@
 # THIRDPARTY
 from fastapi import APIRouter, Query
+from fastapi_cache.decorator import cache
 from fastapi_filter import FilterDepends
 
 # FIRSTPARTY
@@ -13,6 +14,7 @@ router = APIRouter(
 
 
 @router.get("/")
+@cache(expire=60)
 async def get_products(
     page: int = Query(1, ge=1),
     page_size: int = Query(5, le=10, ge=5),

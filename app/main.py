@@ -5,11 +5,15 @@ from typing import AsyncIterator
 
 # THIRDPARTY
 from fastapi import FastAPI, Request
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from redis import asyncio as aioredis
 
 # FIRSTPARTY
 from app.addresses.router import router as addresses_router
 from app.admin.router import router as admins_router
 from app.cartsItems.router import router as carts_items_router
+from app.config import get_redis_url
 from app.database import check_db_connection
 from app.logger import logger
 from app.orders.router import router as orders_router
@@ -20,10 +24,24 @@ from app.users.router import router as users_router
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     await check_db_connection()
+    redis = aioredis.from_url(get_redis_url())
+    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
+
+    try:
+        response = await redis.ping()
+        if response:
+            logger.info("Подключение к Redis успешно!")
+        else:
+            logger.error("Не удалось подключиться к Redis.")
+    except Exception as e:
+        logger.error(f"Произошла ошибка: {e}")
+
     yield
 
 
 app = FastAPI(lifespan=lifespan)
+
+# Проверка подключения
 
 app.include_router(users_router)
 app.include_router(admins_router)

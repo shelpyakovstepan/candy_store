@@ -3,9 +3,12 @@ from datetime import datetime
 from typing import AsyncGenerator
 
 # THIRDPARTY
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
 import httpx
 from httpx import AsyncClient
 import pytest
+from redis import asyncio as aioredis
 from sqlalchemy import and_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,7 +16,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.addresses.models import Addresses, CityEnum
 from app.carts.models import Carts
 from app.cartsItems.models import CartsItems
+from app.config import get_redis_url
 from app.database import async_session_maker
+from app.logger import logger
 from app.main import app as fastapi_app
 from app.orders.models import (
     Orders,
@@ -50,6 +55,30 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
             yield t_session
         finally:
             await t_session.rollback()
+
+
+@pytest.fixture(scope="function")
+async def get_redis():
+    """Фикстура для создания Redis для тестов.
+
+    Yields:
+        Подключение к Redis
+    """
+    redis = aioredis.from_url(get_redis_url())
+    FastAPICache.init(RedisBackend(redis), prefix="test_fastapi-cache")
+
+    try:
+        response = await redis.ping()
+        if response:
+            logger.info("Подключение к Redis успешно!")
+        else:
+            logger.error("Не удалось подключиться к Redis.")
+    except Exception as e:
+        logger.error(f"Произошла ошибка: {e}")
+
+    yield redis
+
+    await redis.aclose()
 
 
 @pytest.fixture
