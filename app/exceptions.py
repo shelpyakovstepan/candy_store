@@ -107,3 +107,8 @@ class YouCanNotOrderByThisId(BaseAppException):
 class YouDoNotHaveOrdersException(BaseAppException):
     status_code = status.HTTP_409_CONFLICT
     detail = "You don't have any orders"
+
+
+class ProductAlreadyExistsException(BaseAppException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = "Product already exists"

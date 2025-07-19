@@ -13,7 +13,7 @@ from app.exceptions import (
     TokenExpiredException,
     UserIsNotPresentException,
 )
-from app.users.dao import UserDAO
+from app.users.dao import UsersDAO
 
 
 def get_token(request: Request):
@@ -34,7 +34,7 @@ async def get_current_user(token: str = Depends(get_token)):
     user_id: str = payload.get("sub")  # pyright: ignore [reportAssignmentType]
     if not user_id:
         raise UserIsNotPresentException
-    user = await UserDAO.find_by_id(int(user_id))
+    user = await UsersDAO.find_by_id(int(user_id))
     if not user:
         raise UserIsNotPresentException
 

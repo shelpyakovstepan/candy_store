@@ -7,7 +7,6 @@ from fastapi import APIRouter, Depends, Query
 import pytz
 
 # FIRSTPARTY
-from app.addresses.dao import AddressesDAO
 from app.addresses.dependencies import get_users_address
 from app.addresses.models import Addresses
 from app.carts.dependencies import get_users_cart
@@ -46,9 +45,6 @@ async def create_order(
 
     if receiving_method == "DELIVERY" and payment == "CASH":
         raise YouCanNotChooseThisPaymentException
-
-    if receiving_method == "PICKUP":
-        address: Addresses = await AddressesDAO.find_by_id(3)  # pyright: ignore [reportAssignmentType]
 
     check_order = await OrdersDAO.find_one_or_none(
         user_id=user.id, cart_id=cart.id, status="WAITING"

@@ -7,11 +7,15 @@ from fastapi import APIRouter, Depends
 # FIRSTPARTY
 from app.admin.dependencies import check_admin_status
 from app.cartsItems.dao import CartsItemsDAO
-from app.exceptions import NotProductsException, NotUserException
+from app.exceptions import (
+    NotProductsException,
+    NotUserException,
+    ProductAlreadyExistsException,
+)
 from app.logger import logger
 from app.products.dao import ProductsDAO
 from app.products.schemas import SProducts, SUpdateProduct
-from app.users.dao import UserDAO
+from app.users.dao import UsersDAO
 
 router = APIRouter(
     prefix="/admin",
@@ -32,6 +36,10 @@ async def add_product(
     description: str,
     image_id: int,
 ) -> SProducts:
+    product = ProductsDAO.find_one_or_none(name=name, category=category)
+    if product:
+        raise ProductAlreadyExistsException
+
     product = await ProductsDAO.add(
         name=name,
         category=category,
@@ -53,7 +61,7 @@ async def update_product(
     product_id: int,
     updated_product_data: SUpdateProduct = Depends(),
 ) -> SProducts:
-    stored_product = await ProductsDAO.find_one_or_none(id=product_id)
+    stored_product = await ProductsDAO.find_by_id(product_id)
     if not stored_product:
         raise NotProductsException
 
@@ -65,7 +73,7 @@ async def update_product(
 
 @router.delete("/")
 async def delete_product(product_id: int):
-    stored_product = await ProductsDAO.find_one_or_none(id=product_id)
+    stored_product = await ProductsDAO.find_by_id(product_id)
     if not stored_product:
         raise NotProductsException
 
@@ -74,10 +82,10 @@ async def delete_product(product_id: int):
     logger.info("Продукт успешно удалён")
 
 
-@router.patch("/")
+@router.patch("//")
 async def change_admin_status(user_id: int, admin_status: bool):
     """Изменяет статус админа пользователя."""
-    user = await UserDAO.update(user_id, is_admin=admin_status)
+    user = await UsersDAO.update(user_id, is_admin=admin_status)
     if not user:
         raise NotUserException
 

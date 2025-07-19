@@ -22,7 +22,7 @@ async_session_maker = async_sessionmaker(
 
 async def check_db_connection():
     try:
-        async with AsyncSession(engine) as session:
+        async with async_session_maker() as session:
             await session.execute(text("SELECT 1"))
             logger.info("Database connection successful")
     except Exception as e:

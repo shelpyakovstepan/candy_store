@@ -13,7 +13,7 @@ from app.users.auth import (
     create_access_token,
     get_password_hash,
 )
-from app.users.dao import UserDAO
+from app.users.dao import UsersDAO
 from app.users.dependencies import get_current_user
 from app.users.models import Users
 from app.users.schemas import SUsersLogin, SUsersRegister
@@ -24,8 +24,8 @@ router = APIRouter(prefix="/auth", tags=["Аутентификация & Пол�
 @router.post("/register")
 async def register(user_data: SUsersRegister):
     """Создаёт нового пользователя."""
-    existing_user_by_email = await UserDAO.find_one_or_none(email=user_data.email)
-    existing_user_by_phone_number = await UserDAO.find_one_or_none(
+    existing_user_by_email = await UsersDAO.find_one_or_none(email=user_data.email)
+    existing_user_by_phone_number = await UsersDAO.find_one_or_none(
         phone_number=user_data.phone_number
     )
     if existing_user_by_email or existing_user_by_phone_number:
@@ -33,7 +33,7 @@ async def register(user_data: SUsersRegister):
 
     hashed_password = get_password_hash(user_data.password)
 
-    new_user = await UserDAO.add(
+    new_user = await UsersDAO.add(
         email=user_data.email,
         phone_number=user_data.phone_number,
         surname=user_data.surname,
