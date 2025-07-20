@@ -136,6 +136,27 @@ class TestAdminApi:
         assert response.status_code == status_code
 
     @pytest.mark.parametrize(
+        "status__in, status_code", [("WAITING", 200), ("WRONG_STATUS", 422)]
+    )
+    async def test_get_all_users_orders(
+        self,
+        create_user,
+        create_product,
+        create_address,
+        create_cart,
+        create_carts_item,
+        create_order,
+        status__in,
+        status_code,
+        authenticated_ac: AsyncClient,
+    ):
+        response = await authenticated_ac.get(
+            "/admin/orders", params={"status__in": status__in}
+        )
+
+        assert response.status_code == status_code
+
+    @pytest.mark.parametrize(
         "user_id, admin_status, status_code",
         [(333333, False, 409), (222222, True, 200)],
     )

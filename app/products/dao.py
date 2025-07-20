@@ -65,10 +65,10 @@ class ProductsDAO(BaseDao):
         products_filter: ProductsFilter,
     ):
         async with async_session_maker() as session:
-            offset_min = (page - 1) * page_size
+            offset = (page - 1) * page_size
             query_filter = products_filter.filter(select(Products))
             filtered_data = await session.execute(
-                query_filter.offset(offset_min).limit(page_size)
+                query_filter.offset(offset).limit(page_size)
             )
             filtered_data = filtered_data.scalars().all()
             response = filtered_data + [  # pyright: ignore [reportOperatorIssue]

@@ -2,17 +2,20 @@
 from typing import List, Literal
 
 # THIRDPARTY
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
+from fastapi_filter import FilterDepends
 
 # FIRSTPARTY
 from app.admin.dependencies import check_admin_status
 from app.cartsItems.dao import CartsItemsDAO
 from app.exceptions import (
+    NotOrdersException,
     NotProductsException,
     NotUserException,
     ProductAlreadyExistsException,
 )
 from app.logger import logger
+from app.orders.dao import OrdersDAO, OrdersStatusFilter
 from app.products.dao import ProductsDAO
 from app.products.schemas import SProducts, SUpdateProduct
 from app.users.dao import UsersDAO
@@ -80,6 +83,22 @@ async def delete_product(product_id: int):
     await CartsItemsDAO.delete(product_id=product_id)
     await ProductsDAO.delete(id=product_id)
     logger.info("Продукт успешно удалён")
+
+
+@router.get("/orders")
+async def get_all_users_orders(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(5, le=10, ge=5),
+    orders_status_filter: OrdersStatusFilter = FilterDepends(OrdersStatusFilter),
+):
+    orders = await OrdersDAO.find_all_users_orders(
+        page=page, page_size=page_size, orders_status_filter=orders_status_filter
+    )
+
+    if not orders:
+        raise NotOrdersException
+
+    return orders
 
 
 @router.patch("//")

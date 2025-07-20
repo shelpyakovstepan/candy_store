@@ -1,7 +1,11 @@
 # STDLIB
 from datetime import date, time
+import math
+from typing import Literal, Optional
 
 # THIRDPARTY
+from fastapi_filter.contrib.sqlalchemy import Filter
+from pydantic import Field
 from sqlalchemy import insert, select
 
 # FIRSTPARTY
@@ -9,6 +13,17 @@ from app.carts.models import Carts
 from app.dao.base import BaseDao
 from app.database import async_session_maker
 from app.orders.models import Orders
+
+
+class OrdersStatusFilter(Filter):
+    status__in: Optional[
+        list[Literal["WAITING", "PREPARING", "READY", "DELIVERY", "COMPLETED"]]
+    ] = Field(
+        default=None,
+    )
+
+    class Constants(Filter.Constants):
+        model = Orders
 
 
 class OrdersDAO(BaseDao):
@@ -55,3 +70,26 @@ class OrdersDAO(BaseDao):
             new_order = new_order.scalar()
 
             return new_order
+
+    @classmethod
+    async def find_all_users_orders(  # pyright: ignore [reportIncompatibleMethodOverride]
+        cls,
+        page: int,
+        page_size: int,
+        orders_status_filter: OrdersStatusFilter,
+    ):
+        async with async_session_maker() as session:
+            offset = (page - 1) * page_size
+            query_filter = orders_status_filter.filter(select(Orders))
+            filtered_data = await session.execute(
+                query_filter.offset(offset).limit(page_size)
+            )
+            filtered_data = filtered_data.scalars().all()
+            response = filtered_data + [  # pyright: ignore [reportOperatorIssue]
+                {
+                    "page": page,
+                    "size": page_size,
+                    "total": math.ceil(len(filtered_data) / page_size),
+                }
+            ]
+            return response

@@ -21,9 +21,7 @@ from app.products.router import router as products_router
 from app.users.router import router as users_router
 
 
-@asynccontextmanager
-async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    await check_db_connection()
+async def redis_connection():
     redis = aioredis.from_url(get_redis_url())
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
 
@@ -35,6 +33,13 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
             logger.error("Не удалось подключиться к Redis.")
     except Exception as e:
         logger.error(f"Произошла ошибка: {e}")
+        raise e
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    await check_db_connection()
+    await redis_connection()
 
     yield
 

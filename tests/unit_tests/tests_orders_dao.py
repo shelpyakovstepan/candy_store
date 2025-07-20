@@ -5,7 +5,7 @@ from datetime import datetime
 import pytest
 
 # FIRSTPARTY
-from app.orders.dao import OrdersDAO
+from app.orders.dao import OrdersDAO, OrdersStatusFilter
 
 
 class TestOrdersDAO:
@@ -92,6 +92,33 @@ class TestOrdersDAO:
             assert order.cart_id == create_carts_item.cart_id
         else:
             assert not order
+
+    @pytest.mark.parametrize(
+        "page, page_size, status",
+        [
+            (1, 5, "WAITING"),
+        ],
+    )
+    async def test_find_all_users_orders(
+        self,
+        create_address,
+        create_product,
+        create_carts_item,
+        create_order,
+        page,
+        page_size,
+        status,
+    ):
+        orders_status_filter = OrdersStatusFilter(status__in=status)
+
+        assert (
+            await OrdersDAO.find_all_users_orders(
+                page=page,
+                page_size=page_size,
+                orders_status_filter=orders_status_filter,
+            )
+            is not None
+        )
 
     async def test_orders_delete(
         self, create_address, create_product, create_carts_item, create_order
