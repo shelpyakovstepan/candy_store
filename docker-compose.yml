@@ -44,6 +44,8 @@ services:
 
       SECRET_KEY: "${SECRET_KEY}"
       ALGORITHM: "${ALGORITHM}"
+
+      BOT_TOKEN: "${BOT_TOKEN}"
     restart: always
     depends_on:
       db:
