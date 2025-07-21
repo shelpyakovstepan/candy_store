@@ -1,4 +1,5 @@
 # STDLIB
+import hashlib
 import os
 from typing import Literal
 
@@ -21,6 +22,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
 
+    BOT_TOKEN: str
+
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
     )
@@ -38,3 +41,7 @@ def get_db_url():
 
 def get_redis_url():
     return f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}"
+
+
+def get_bot_token_hash():
+    return hashlib.sha256(settings.BOT_TOKEN.encode())

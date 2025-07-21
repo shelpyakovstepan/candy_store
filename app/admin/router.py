@@ -39,7 +39,7 @@ async def add_product(
     description: str,
     image_id: int,
 ) -> SProducts:
-    product = ProductsDAO.find_one_or_none(name=name, category=category)
+    product = await ProductsDAO.find_one_or_none(name=name, category=category)
     if product:
         raise ProductAlreadyExistsException
 

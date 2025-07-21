@@ -2,9 +2,12 @@
 from contextlib import asynccontextmanager
 import time
 from typing import AsyncIterator
+import urllib.parse
 
 # THIRDPARTY
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
+from fastapi.requests import Request
+from fastapi.templating import Jinja2Templates
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as aioredis
@@ -45,9 +48,6 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(lifespan=lifespan)
-
-# Проверка подключения
-
 app.include_router(users_router)
 app.include_router(admins_router)
 app.include_router(addresses_router)
@@ -57,6 +57,27 @@ app.include_router(products_router)
 app.include_router(carts_items_router)
 
 app.include_router(orders_router)
+
+templates = Jinja2Templates("app/templates")
+
+app.mount("", users_router)
+
+
+@app.middleware("http")
+async def middleware(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/auth/"):
+        return response
+
+    url_safe_path = urllib.parse.quote(request.url.path, safe="")
+    template_context = {"request": request, "next_path": url_safe_path}
+    login_wall = templates.TemplateResponse("login.html", template_context)
+
+    token = request.cookies.get("access_token")
+    if not token:
+        return login_wall
+
+    return response
 
 
 @app.middleware("http")

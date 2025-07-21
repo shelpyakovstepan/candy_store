@@ -28,9 +28,9 @@ class TestProductsApi:
         "product_id,status_code", [(222222, 200), (777777, 409), ("one", 422)]
     )
     async def test_get_product_by_id(
-        self, create_product, product_id, status_code, ac: AsyncClient
+        self, create_product, product_id, status_code, authenticated_ac: AsyncClient
     ):
-        response = await ac.get(
+        response = await authenticated_ac.get(
             f"/products/{product_id}", params={"product_id": product_id}
         )
 

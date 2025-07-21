@@ -6,7 +6,7 @@ from typing import AsyncGenerator
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 import httpx
-from httpx import AsyncClient
+from httpx import AsyncClient, Cookies
 import pytest
 from redis import asyncio as aioredis
 from sqlalchemy import and_, delete
@@ -27,19 +27,20 @@ from app.orders.models import (
     StatusEnum,
 )
 from app.products.models import Products, UnitEnum
+from app.users.auth import create_access_token
 from app.users.models import Users
 
 # @pytest.fixture(scope="session", autouse=True)
 # async def prepare_database():
-#  async with engine.begin() as connection:
-#      await connection.execute(text("DROP TABLE orders CASCADE"))
-#      await connection.execute(text("DROP TABLE addresses CASCADE"))
-#      query = delete(CartsItems)
-#      await connection.execute(query)
-#      await connection.execute(text("DROP TABLE products CASCADE"))
-#      await connection.execute(text("DROP TABLE carts CASCADE"))
-#      await connection.execute(text("DROP TABLE users CASCADE"))
-#      await connection.run_sync(Base.metadata.create_all)
+# async with engine.begin() as connection:
+#     await connection.execute(text("DROP TABLE orders CASCADE"))
+#     await connection.execute(text("DROP TABLE addresses CASCADE"))
+#     query = delete(CartsItems)
+#     await connection.execute(query)
+#     await connection.execute(text("DROP TABLE products CASCADE"))
+#     await connection.execute(text("DROP TABLE carts CASCADE"))
+#     await connection.execute(text("DROP TABLE users CASCADE"))
+#     await connection.run_sync(Base.metadata.create_all)
 
 
 @pytest.fixture(scope="function")
@@ -95,19 +96,11 @@ async def create_user(
         пользователя
     """
     id_ = 222222
-    email = "test@user.com"
-    phone_number = "+72227778899"
-    surname = "Surname"
-    name = "Name"
-    hashed_password = "$2b$12$hTdYOVyjy.GCmFP2ArKncuG5Hg5Vlwh0qovYYNp10VRMc5129FmO6"
+    user_chat_id = 11111
     is_admin = True
     user = Users(
         id=id_,
-        email=email,
-        phone_number=phone_number,
-        surname=surname,
-        name=name,
-        hashed_password=hashed_password,
+        user_chat_id=user_chat_id,
         is_admin=is_admin,
     )
     get_session.add(user)
@@ -382,13 +375,17 @@ async def ac():
 
 
 @pytest.fixture(scope="function")
-async def authenticated_ac():
+async def authenticated_ac(create_user):
     async with AsyncClient(
         base_url="http://test", transport=httpx.ASGITransport(app=fastapi_app)
     ) as ac:
-        await ac.post(
-            "/auth/login",
-            json={"email": "test@user.com", "password": "kolobok"},
-        )
+        # access_token = create_access_token({"sub": str(create_user.id)})
+        access_token = create_access_token({"sub": str(create_user.id)})
+
+        ## Устанавливаем куку напрямую в клиент
+        ac.cookies = Cookies()
+        ac.cookies.set("access_token", access_token)
         assert ac.cookies["access_token"]
         yield ac
+
+        ac.cookies.clear()

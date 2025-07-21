@@ -1,76 +1,74 @@
+# STDLIB
+import hmac
+from typing import Annotated
+
 # THIRDPARTY
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Query
+from fastapi.requests import Request
+from fastapi.responses import PlainTextResponse, RedirectResponse
 
 # FIRSTPARTY
 from app.carts.dao import CartsDAO
-from app.exceptions import (
-    IncorrectUserEmailOrPasswordException,
-    UserAlreadyExistsException,
-)
+from app.config import get_bot_token_hash
 from app.logger import logger
-from app.users.auth import (
-    authenticate_user,
-    create_access_token,
-    get_password_hash,
-)
+from app.users.auth import create_access_token
 from app.users.dao import UsersDAO
 from app.users.dependencies import get_current_user
 from app.users.models import Users
-from app.users.schemas import SUsersLogin, SUsersRegister
 
-router = APIRouter(prefix="/auth", tags=["Аутентификация & Пользователи"])
+router = APIRouter(
+    prefix="/auth",
+    tags=["Аутентификация & Пользователи"],
+)
 
 
-@router.post("/register")
-async def register(user_data: SUsersRegister):
-    """Создаёт нового пользователя."""
-    existing_user_by_email = await UsersDAO.find_one_or_none(email=user_data.email)
-    existing_user_by_phone_number = await UsersDAO.find_one_or_none(
-        phone_number=user_data.phone_number
+@router.get("/telegram-callback")
+async def telegram_callback(
+    request: Request,
+    user_id: Annotated[int, Query(alias="id")],
+    query_hash: Annotated[str, Query(alias="hash")],
+    next_url: Annotated[str, Query(alias="next")] = "/",
+):
+    params = request.query_params.items()
+    data_check_string = "\n".join(
+        sorted(f"{x}={y}" for x, y in params if x not in ("hash", "next"))
     )
-    if existing_user_by_email or existing_user_by_phone_number:
-        raise UserAlreadyExistsException
+    computed_hash = hmac.new(
+        get_bot_token_hash().digest(), data_check_string.encode(), "sha256"
+    ).hexdigest()
+    is_correct = hmac.compare_digest(computed_hash, query_hash)
+    if not is_correct:
+        return PlainTextResponse(
+            "Authorization failed. Please try again", status_code=401
+        )
 
-    hashed_password = get_password_hash(user_data.password)
+    new_user = await UsersDAO.find_one_or_none(user_chat_id=user_id)
+    if not new_user:
+        new_user = await UsersDAO.add(
+            user_chat_id=user_id,
+        )
+        logger.info("User successfully registered")
 
-    new_user = await UsersDAO.add(
-        email=user_data.email,
-        phone_number=user_data.phone_number,
-        surname=user_data.surname,
-        name=user_data.name,
-        hashed_password=hashed_password,
-    )
+        await CartsDAO.add(user_id=new_user.id)  # pyright: ignore [reportOptionalMemberAccess]
+        logger.info("Cart successfully added")
 
-    logger.info("User successfully registered")
+    access_token = create_access_token({"sub": str(new_user.id)})  # pyright: ignore [reportOptionalMemberAccess]
 
-    await CartsDAO.add(user_id=new_user.id)  # pyright: ignore [reportOptionalMemberAccess]
-
-    logger.info("Cart successfully added")
-
-
-@router.post("/login")
-async def login(response: Response, user_data: SUsersLogin):
-    """Логинит пользователя в системе."""
-    user = await authenticate_user(user_data.email, user_data.password)
-    if not user:
-        raise IncorrectUserEmailOrPasswordException
-
-    access_token = create_access_token({"sub": str(user.id)})
+    response = RedirectResponse(next_url)
     response.set_cookie("access_token", access_token, httponly=True)
+    return response
 
-    logger.info("User logged in")
 
-    return {"access_token": access_token}
+@router.get("/logout")
+async def logout():
+    response = RedirectResponse("/")
+    response.delete_cookie(
+        key="access_token",
+    )
+    return response
 
 
 @router.get("/me")
 async def get_me(user: Users = Depends(get_current_user)):
     """Выдаёт информацию пользователю о самом себе."""
     return user
-
-
-@router.post("/logout")
-async def logout_user(response: Response):
-    """Осуществляет выход пользователя из системы"""
-    response.delete_cookie("access_token")
-    logger.info("User logged out")
