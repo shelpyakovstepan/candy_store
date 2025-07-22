@@ -21,6 +21,7 @@ from app.database import check_db_connection
 from app.logger import logger
 from app.orders.router import router as orders_router
 from app.products.router import router as products_router
+from app.rabbitmq.base import broker
 from app.users.router import router as users_router
 
 
@@ -43,6 +44,7 @@ async def redis_connection():
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     await check_db_connection()
     await redis_connection()
+    await broker.connect()
 
     yield
 

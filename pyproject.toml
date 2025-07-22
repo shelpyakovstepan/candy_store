@@ -31,7 +31,9 @@ dependencies = [
     "fastapi-cache2 (>=0.2.2,<0.3.0)",
     "redis (>=6.2.0,<7.0.0)",
     "pytest-mock-resources (>=2.12.2,<3.0.0)",
-    "joserfc (>=1.2.2,<2.0.0)"
+    "joserfc (>=1.2.2,<2.0.0)",
+    "faststream[rabbit] (>=0.5.47,<0.6.0)",
+    "kombu (>=5.5.4,<6.0.0)"
 ]
 
 

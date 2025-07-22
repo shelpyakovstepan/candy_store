@@ -15,6 +15,8 @@ services:
       - "5432:5432"
     volumes:
       - fastapi_postgres_data:/var/lib/postgresql/data
+    networks:
+      - rabbitmq_network
 
   redis:
     image: redis:7
@@ -24,6 +26,26 @@ services:
       REDIS_PORT: "${REDIS_PORT}"
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+    networks:
+      - rabbitmq_network
+
+  rabbitmq:
+    image: rabbitmq:4.1.1-management
+    container_name: daily_planner_rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_DEFAULT_USER}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_DEFAULT_PASS}"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    hostname: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - rabbitmq_network
 
   candy_store:
     image: candy_store_image:latest
@@ -42,6 +64,11 @@ services:
       REDIS_HOST: "${REDIS_HOST}"
       REDIS_PORT: "${REDIS_PORT}"
 
+      RABBIT_USER: "${RABBITMQ_DEFAULT_USER}"
+      RABBIT_PASS: "${RABBITMQ_DEFAULT_PASS}"
+      RABBIT_HOST: "${RABBIT_HOST}"
+      RABBIT_PORT: "${RABBIT_PORT}"
+
       SECRET_KEY: "${SECRET_KEY}"
       ALGORITHM: "${ALGORITHM}"
 
@@ -52,9 +79,18 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     command: [ "bash", "/candy_store/docker/app.sh" ]
     ports:
       - "7777:8000"
+    networks:
+      - rabbitmq_network
 
 volumes:
   fastapi_postgres_data:
+
+networks:
+  rabbitmq_network:
+    name: rabbitmq_network
+    driver: bridge

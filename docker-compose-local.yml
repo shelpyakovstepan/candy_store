@@ -13,6 +13,8 @@ services:
       - "5432:5432"
     volumes:
       - fastapi_postgres_data:/var/lib/postgresql/data
+    networks:
+      - rabbitmq_network
 
   redis:
     image: redis:7
@@ -21,6 +23,25 @@ services:
       - .env-non-dev
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+    networks:
+      - rabbitmq_network
+
+  rabbitmq:
+    image: rabbitmq:4.1.1-management
+    container_name: candy_store_rabbitmq
+    env_file:
+      - .env-non-dev
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    hostname: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - rabbitmq_network
 
   candy_store:
     image: candy_store_image:latest
@@ -35,9 +56,20 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: [ "bash", "/candy_store/docker/app.sh" ]
+      rabbitmq:
+        condition: service_healthy
+    command:
+      [ "bash", "/candy_store/docker/app.sh" ]
+
     ports:
       - "7777:8000"
+    networks:
+      - rabbitmq_network
 
 volumes:
   fastapi_postgres_data:
+
+networks:
+  rabbitmq_network:
+    name: rabbitmq_network
+    driver: bridge

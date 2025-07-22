@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     REDIS_HOST: str
     REDIS_PORT: int
 
+    RABBIT_USER: str
+    RABBIT_PASS: str
+    RABBIT_HOST: str
+    RABBIT_PORT: int
+
     SECRET_KEY: str
     ALGORITHM: str
 
@@ -41,6 +46,13 @@ def get_db_url():
 
 def get_redis_url():
     return f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}"
+
+
+def get_rabbitmq_url():
+    return (
+        f"amqp://{settings.RABBIT_USER}:{settings.RABBIT_PASS}@"
+        f"{settings.RABBIT_HOST}:{settings.RABBIT_PORT}/"
+    )
 
 
 def get_bot_token_hash():

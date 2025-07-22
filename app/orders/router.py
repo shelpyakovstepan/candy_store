@@ -18,7 +18,10 @@ from app.exceptions import (
     YouCanNotOrderByThisId,
     YouDoNotHaveOrdersException,
 )
+from app.logger import logger
 from app.orders.dao import OrdersDAO
+from app.rabbitmq.base import send_message
+from app.rabbitmq.messages_templates import admin_orders_text, user_orders_text
 from app.users.dependencies import get_current_user
 from app.users.models import Users
 
@@ -63,6 +66,13 @@ async def create_order(
         comment=comment,  # pyright: ignore [reportArgumentType]
     )
 
+    await send_message(
+        {"chat_id": user.user_chat_id, "text": await user_orders_text(order=new_order)},  # pyright: ignore [reportArgumentType]
+        "messages-queue",
+    )
+    logger.info("Сообщение о заказе отправлено пользователю в телеграм")
+    await send_message(await admin_orders_text(order=new_order), "admin-queue")  # pyright: ignore [reportArgumentType]
+    logger.info("Сообщение о заказе отправлено админу в телеграм")
     return new_order
 
 
