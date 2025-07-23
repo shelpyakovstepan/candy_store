@@ -18,3 +18,6 @@ class SOrders(BaseModel):
     payment: str
     total_price: int
     status: str
+
+    class Config:
+        from_attributes = True

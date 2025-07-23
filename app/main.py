@@ -15,6 +15,7 @@ from redis import asyncio as aioredis
 # FIRSTPARTY
 from app.addresses.router import router as addresses_router
 from app.admin.router import router as admins_router
+from app.carts.router import router as carts_router
 from app.cartsItems.router import router as carts_items_router
 from app.config import get_redis_url
 from app.database import check_db_connection
@@ -55,6 +56,7 @@ app.include_router(admins_router)
 app.include_router(addresses_router)
 
 app.include_router(products_router)
+app.include_router(carts_router)
 
 app.include_router(carts_items_router)
 

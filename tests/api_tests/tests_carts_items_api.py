@@ -43,7 +43,7 @@ class TestCartsItemsApi:
         response = await authenticated_ac.get("/cartsitems/")
 
         assert response.status_code == 200
-        assert len(response.json()) == 2
+        assert len(response.json()) == 1
 
     @pytest.mark.parametrize(
         "cart_item_id,action,quantity,status_code",

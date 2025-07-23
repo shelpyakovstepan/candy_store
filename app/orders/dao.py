@@ -111,14 +111,16 @@ class OrdersDAO(BaseDao):
                     query_filter.offset(offset).limit(page_size)
                 )
                 filtered_data = filtered_data.scalars().all()
-                response = filtered_data + [  # pyright: ignore [reportOperatorIssue]
+
+                filtered_data = filtered_data + [  # pyright: ignore [reportOperatorIssue]
                     {
                         "page": page,
                         "size": page_size,
                         "total": math.ceil(len(filtered_data) / page_size),
                     }
                 ]
-                return response
+
+                return filtered_data
 
         except (SQLAlchemyError, Exception) as e:
             if isinstance(e, SQLAlchemyError):

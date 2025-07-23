@@ -1,5 +1,5 @@
 # STDLIB
-from typing import Literal
+from typing import List, Literal
 
 # THIRDPARTY
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -50,10 +50,10 @@ async def add_cart_item(
 
 
 @router.get("/")
-async def get_all_cart_items(cart: Carts = Depends(get_users_cart)):
+async def get_all_cart_items(cart: Carts = Depends(get_users_cart)) -> List[SCartsItem]:
     cart_items = await CartsItemsDAO.find_all(cart_id=cart.id)
 
-    return cart_items + [{"price": cart.total_price}]  # pyright: ignore [reportOperatorIssue]
+    return cart_items
 
 
 @router.patch("/update")

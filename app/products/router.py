@@ -18,7 +18,7 @@ router = APIRouter(
 
 
 @router.get("/")
-@cache(expire=60)
+@cache(expire=30)
 async def get_products(
     page: int = Query(1, ge=1),
     page_size: int = Query(5, le=10, ge=5),

@@ -46,12 +46,10 @@ class CartsItemsDAO(BaseDao):
                     )
                     .returning(Carts.total_price)
                 )
-                update_cart_total_price = await session.execute(update_cart_total_price)
+                await session.execute(update_cart_total_price)
                 await session.commit()
-                add_new_carts_item.total_cart_price = (  # pyright: ignore [reportAttributeAccessIssue]
-                    update_cart_total_price.scalar()
-                )
-                return add_new_carts_item  # pyright: ignore [reportOperatorIssue]
+
+                return add_new_carts_item
 
         except (SQLAlchemyError, Exception) as e:
             if isinstance(e, SQLAlchemyError):
@@ -137,12 +135,9 @@ class CartsItemsDAO(BaseDao):
                         .returning(Carts.total_price)
                     )
 
-                update_cart_total_price = await session.execute(update_cart_total_price)
+                await session.execute(update_cart_total_price)
                 await session.commit()
 
-                update_cart_item_quantity.total_cart_price = (  # pyright: ignore [reportAttributeAccessIssue]
-                    update_cart_total_price.scalar()
-                )
                 return update_cart_item_quantity
 
         except (SQLAlchemyError, Exception) as e:
@@ -193,12 +188,8 @@ class CartsItemsDAO(BaseDao):
                     )
                     .returning(Carts.total_price)
                 )
-                update_cart_total_price = await session.execute(update_cart_total_price)
+                await session.execute(update_cart_total_price)
                 await session.commit()
-
-                delete_cart_item.total_cart_price = update_cart_total_price.scalar()
-
-                return {"total_cart_price": delete_cart_item.total_cart_price}
 
         except (SQLAlchemyError, Exception) as e:
             if isinstance(e, SQLAlchemyError):

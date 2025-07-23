@@ -7,4 +7,3 @@ class SCartsItem(BaseModel):
     cart_id: int
     product_id: int
     quantity: int
-    total_cart_price: int
