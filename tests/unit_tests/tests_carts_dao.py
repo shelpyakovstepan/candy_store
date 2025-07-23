@@ -13,16 +13,16 @@ class TestCartsDAO:
         assert cart.user_id == create_user.id
 
     @pytest.mark.parametrize(
-        "user_id, exists",
+        "user_id, status, exists",
         [
-            (222222, True),
-            (333333, False),
+            (222222, "ACTIVE", True),
+            (333333, "ACTIVE", False),
         ],
     )
     async def test_carts_find_one_or_none(
-        self, create_user, create_cart, user_id, exists
+        self, create_user, create_cart, user_id, status, exists
     ):
-        cart = await CartsDAO.find_one_or_none(user_id=user_id)
+        cart = await CartsDAO.find_one_or_none(user_id=user_id, status=status)
 
         if exists:
             assert cart is not None

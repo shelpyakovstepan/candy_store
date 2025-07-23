@@ -9,15 +9,15 @@ import httpx
 from httpx import AsyncClient, Cookies
 import pytest
 from redis import asyncio as aioredis
-from sqlalchemy import and_, delete
+from sqlalchemy import and_, delete, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # FIRSTPARTY
 from app.addresses.models import Addresses, CityEnum
-from app.carts.models import Carts
+from app.carts.models import Carts, StatusCartEnum
 from app.cartsItems.models import CartsItems
 from app.config import get_redis_url
-from app.database import async_session_maker
+from app.database import Base, async_session_maker, engine
 from app.logger import logger
 from app.main import app as fastapi_app
 from app.orders.models import (
@@ -30,17 +30,18 @@ from app.products.models import Products, UnitEnum
 from app.users.auth import create_access_token
 from app.users.models import Users
 
-# @pytest.fixture(scope="session", autouse=True)
-# async def prepare_database():
-# async with engine.begin() as connection:
-#     await connection.execute(text("DROP TABLE orders CASCADE"))
-#     await connection.execute(text("DROP TABLE addresses CASCADE"))
-#     query = delete(CartsItems)
-#     await connection.execute(query)
-#     await connection.execute(text("DROP TABLE products CASCADE"))
-#     await connection.execute(text("DROP TABLE carts CASCADE"))
-#     await connection.execute(text("DROP TABLE users CASCADE"))
-#     await connection.run_sync(Base.metadata.create_all)
+
+@pytest.fixture(scope="session", autouse=True)
+async def prepare_database():
+    async with engine.begin() as connection:
+        await connection.execute(text("DROP TABLE orders CASCADE"))
+        await connection.execute(text("DROP TABLE addresses CASCADE"))
+        query = delete(CartsItems)
+        await connection.execute(query)
+        await connection.execute(text("DROP TABLE products CASCADE"))
+        await connection.execute(text("DROP TABLE carts CASCADE"))
+        await connection.execute(text("DROP TABLE users CASCADE"))
+        await connection.run_sync(Base.metadata.create_all)
 
 
 @pytest.fixture(scope="function")
@@ -196,11 +197,13 @@ async def create_cart(
     id_ = 222222
     user_id = 222222
     total_price = 5000
+    status = StatusCartEnum.ACTIVE
 
     cart = Carts(
         id=id_,
         user_id=user_id,
         total_price=total_price,
+        status=status,
     )
 
     get_session.add(cart)
