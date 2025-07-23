@@ -9,6 +9,7 @@ from starlette import status
 from app.carts.dependencies import get_users_cart
 from app.carts.models import Carts
 from app.cartsItems.dao import CartsItemsDAO
+from app.cartsItems.schemas import SCartsItem
 from app.exceptions import (
     NotCartsItemException,
     NotProductsException,
@@ -25,7 +26,7 @@ router = APIRouter(
 @router.post("/add")
 async def add_cart_item(
     product_id: int, quantity: int = Query(gt=0), cart: Carts = Depends(get_users_cart)
-):
+) -> SCartsItem:
     product = await ProductsDAO.find_by_id(product_id)
     if not product:
         raise NotProductsException
@@ -61,7 +62,7 @@ async def update_carts_items_quantity(
     action: Literal["reduce", "increase"],
     quantity: int = Query(gt=0),
     cart: Carts = Depends(get_users_cart),
-):
+) -> SCartsItem:
     cart_item = await CartsItemsDAO.find_one_or_none(id=cart_item_id, cart_id=cart.id)
     if not cart_item:
         raise NotCartsItemException

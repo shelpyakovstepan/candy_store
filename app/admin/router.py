@@ -19,6 +19,7 @@ from app.orders.dao import OrdersDAO, OrdersStatusFilter
 from app.products.dao import ProductsDAO
 from app.products.schemas import SProducts, SUpdateProduct
 from app.users.dao import UsersDAO
+from app.users.schemas import SUsers
 
 router = APIRouter(
     prefix="/admin",
@@ -102,7 +103,7 @@ async def get_all_users_orders(
 
 
 @router.patch("//")
-async def change_admin_status(user_id: int, admin_status: bool):
+async def change_admin_status(user_id: int, admin_status: bool) -> SUsers:
     """Изменяет статус админа пользователя."""
     user = await UsersDAO.update(user_id, is_admin=admin_status)
     if not user:

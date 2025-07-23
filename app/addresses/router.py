@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends
 
 # FIRSTPARTY
 from app.addresses.dao import AddressesDAO
+from app.addresses.schemas import SAddresses
 from app.exceptions import AddressAlreadyExistsException, NotAddressException
 from app.users.dependencies import get_current_user
 from app.users.models import Users
@@ -21,7 +22,7 @@ async def create_address(
     flat: int,
     entrance: int,
     user: Users = Depends(get_current_user),
-):
+) -> SAddresses:
     """Город по умолчанию: Санкт-Петербург"""
     check_stored_address = await AddressesDAO.find_one_or_none(user_id=user.id)
     if check_stored_address:
@@ -43,7 +44,7 @@ async def create_address(
 @router.get("/get")
 async def get_address(
     user: Users = Depends(get_current_user),
-):
+) -> SAddresses:
     address = await AddressesDAO.find_one_or_none(user_id=user.id)
     if not address:
         raise NotAddressException
@@ -59,7 +60,7 @@ async def update_address(
     flat: int,
     entrance: int,
     user: Users = Depends(get_current_user),
-):
+) -> SAddresses:
     stored_address = await AddressesDAO.find_one_or_none(user_id=user.id)
     if not stored_address:
         raise NotAddressException

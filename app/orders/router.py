@@ -1,6 +1,6 @@
 # STDLIB
 from datetime import date, datetime, time
-from typing import Literal, Optional
+from typing import List, Literal, Optional
 
 # THIRDPARTY
 from fastapi import APIRouter, Depends, Query
@@ -20,6 +20,7 @@ from app.exceptions import (
 )
 from app.logger import logger
 from app.orders.dao import OrdersDAO
+from app.orders.schemas import SOrders
 from app.rabbitmq.base import send_message
 from app.rabbitmq.messages_templates import admin_orders_text, user_orders_text
 from app.users.dependencies import get_current_user
@@ -41,7 +42,7 @@ async def create_order(
     user: Users = Depends(get_current_user),
     cart: Carts = Depends(get_users_cart),
     address: Addresses = Depends(get_users_address),  # pyright: ignore [reportRedeclaration]
-):
+) -> SOrders:
     delta = date_receiving - datetime.now(pytz.timezone("Europe/Moscow")).date()
     if delta.days < 3:
         raise NotTrueTimeException
@@ -79,7 +80,7 @@ async def create_order(
 @router.get("/")
 async def get_all_orders(
     user: Users = Depends(get_current_user),
-):
+) -> List[SOrders]:
     orders = await OrdersDAO.find_all(user_id=user.id)
     if not orders:
         raise YouDoNotHaveOrdersException

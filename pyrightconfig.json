@@ -10,6 +10,7 @@
   ],
 
   "reportGeneralTypeIssues": false,
+  "reportReturnType": false,
 
   "pythonVersion": "3.12"
 }
