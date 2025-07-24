@@ -8,7 +8,6 @@ from fastapi.requests import Request
 from fastapi.responses import PlainTextResponse, RedirectResponse
 
 # FIRSTPARTY
-from app.carts.dao import CartsDAO
 from app.config import get_bot_token_hash
 from app.logger import logger
 from app.users.auth import create_access_token
@@ -48,9 +47,6 @@ async def telegram_callback(
             user_chat_id=user_id,
         )
         logger.info("User successfully registered")
-
-        await CartsDAO.add(user_id=new_user.id)  # pyright: ignore [reportOptionalMemberAccess]
-        logger.info("Cart successfully added")
 
     access_token = create_access_token({"sub": str(new_user.id)})  # pyright: ignore [reportOptionalMemberAccess]
 

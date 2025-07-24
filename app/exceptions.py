@@ -117,3 +117,13 @@ class ProductAlreadyExistsException(BaseAppException):
 class NotOrdersException(BaseAppException):
     status_code = status.HTTP_409_CONFLICT
     detail = "Not orders"
+
+
+class YouCanNotPayOrderException(BaseAppException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = "You can't pay this order"
+
+
+class YouDoNotHaveCartItemsException(BaseAppException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = "You don't have cart items"

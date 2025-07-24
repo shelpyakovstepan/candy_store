@@ -18,6 +18,8 @@ from app.logger import logger
 from app.orders.dao import OrdersDAO, OrdersStatusFilter
 from app.products.dao import ProductsDAO
 from app.products.schemas import SProducts, SUpdateProduct
+from app.rabbitmq.base import send_message
+from app.rabbitmq.messages_templates import update_user_orders_text
 from app.users.dao import UsersDAO
 from app.users.schemas import SUsers
 
@@ -100,6 +102,27 @@ async def get_all_users_orders(
         raise NotOrdersException
 
     return orders
+
+
+@router.patch("/update/{order_id}")
+async def change_order_status(
+    order_id: int, status: Literal["READY", "DELIVERY", "COMPLETED"]
+):
+    order = await OrdersDAO.find_by_id(order_id)
+    if not order:
+        raise NotOrdersException
+
+    user = await UsersDAO.find_by_id(order.user_id)
+
+    updated_order = await OrdersDAO.update(order_id, status=status)
+    await send_message(
+        {
+            "chat_id": user.user_chat_id,  # pyright: ignore [reportOptionalMemberAccess]
+            "text": await update_user_orders_text(order=updated_order),  # pyright: ignore [reportArgumentType]
+        },
+        "messages-queue",
+    )
+    return order
 
 
 @router.patch("//")

@@ -9,6 +9,7 @@ import pytz
 # FIRSTPARTY
 from app.addresses.dependencies import get_users_address
 from app.addresses.models import Addresses
+from app.carts.dao import CartsDAO
 from app.carts.dependencies import get_users_cart
 from app.carts.models import Carts
 from app.exceptions import (
@@ -16,10 +17,13 @@ from app.exceptions import (
     YouCanNotAddNewOrderException,
     YouCanNotChooseThisPaymentException,
     YouCanNotOrderByThisId,
+    YouCanNotPayOrderException,
+    YouDoNotHaveCartItemsException,
     YouDoNotHaveOrdersException,
 )
 from app.logger import logger
 from app.orders.dao import OrdersDAO
+from app.orders.models import StatusEnum
 from app.orders.schemas import SOrders
 from app.rabbitmq.base import send_message
 from app.rabbitmq.messages_templates import admin_orders_text, user_orders_text
@@ -47,6 +51,9 @@ async def create_order(
     if delta.days < 3:
         raise NotTrueTimeException
 
+    if cart.total_price == 0:
+        raise YouDoNotHaveCartItemsException
+
     if receiving_method == "DELIVERY" and payment == "CASH":
         raise YouCanNotChooseThisPaymentException
 
@@ -66,15 +73,30 @@ async def create_order(
         payment=payment,
         comment=comment,  # pyright: ignore [reportArgumentType]
     )
-
+    await CartsDAO.update(cart.id, status="INACTIVE")
     await send_message(
         {"chat_id": user.user_chat_id, "text": await user_orders_text(order=new_order)},  # pyright: ignore [reportArgumentType]
         "messages-queue",
     )
     logger.info("Сообщение о заказе отправлено пользователю в телеграм")
-    await send_message(await admin_orders_text(order=new_order), "admin-queue")  # pyright: ignore [reportArgumentType]
-    logger.info("Сообщение о заказе отправлено админу в телеграм")
     return new_order
+
+
+@router.patch("/pay")
+async def pay_for_the_order(
+    order_id: int,
+):
+    pay_order = await OrdersDAO.find_by_id(order_id)
+    if not pay_order:
+        raise YouDoNotHaveOrdersException
+
+    if pay_order.status != StatusEnum.WAITING:
+        raise YouCanNotPayOrderException
+
+    pay_order = await OrdersDAO.update(order_id, status="PREPARING")
+    await send_message(await admin_orders_text(order=pay_order), "admin-queue")  # pyright: ignore [reportArgumentType]
+
+    return pay_order
 
 
 @router.get("/")

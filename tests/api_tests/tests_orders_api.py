@@ -70,6 +70,30 @@ class TestOrdersApi:
     @pytest.mark.parametrize(
         "order_id,status_code",
         [
+            (999999, 409),
+        ],
+    )
+    async def test_pay_for_the_order(
+        self,
+        create_user,
+        create_address,
+        create_product,
+        create_cart,
+        create_carts_item,
+        create_order,
+        authenticated_ac: AsyncClient,
+        order_id,
+        status_code,
+    ):
+        response = await authenticated_ac.patch(
+            "/orders/pay", params={"order_id": order_id}
+        )
+
+        assert response.status_code == status_code
+
+    @pytest.mark.parametrize(
+        "order_id,status_code",
+        [
             (333333, 409),
             (222222, 200),
         ],
