@@ -85,7 +85,7 @@ async def create_order(
 @router.patch("/pay")
 async def pay_for_the_order(
     order_id: int,
-):
+) -> SOrders:
     pay_order = await OrdersDAO.find_by_id(order_id)
     if not pay_order:
         raise YouDoNotHaveOrdersException

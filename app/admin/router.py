@@ -16,6 +16,7 @@ from app.exceptions import (
 )
 from app.logger import logger
 from app.orders.dao import OrdersDAO, OrdersStatusFilter
+from app.orders.schemas import SOrders
 from app.products.dao import ProductsDAO
 from app.products.schemas import SProducts, SUpdateProduct
 from app.rabbitmq.base import send_message
@@ -107,7 +108,7 @@ async def get_all_users_orders(
 @router.patch("/update/{order_id}")
 async def change_order_status(
     order_id: int, status: Literal["READY", "DELIVERY", "COMPLETED"]
-):
+) -> SOrders:
     order = await OrdersDAO.find_by_id(order_id)
     if not order:
         raise NotOrdersException
