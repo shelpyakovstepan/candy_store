@@ -4,7 +4,10 @@ import os
 from typing import Literal
 
 # THIRDPARTY
+from passlib.context import CryptContext
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class Settings(BaseSettings):
@@ -28,6 +31,8 @@ class Settings(BaseSettings):
     ALGORITHM: str
 
     BOT_TOKEN: str
+
+    PASSWORD: str
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
@@ -57,3 +62,7 @@ def get_rabbitmq_url():
 
 def get_bot_token_hash():
     return hashlib.sha256(settings.BOT_TOKEN.encode())
+
+
+def get_password_hash() -> str:
+    return pwd_context.hash(settings.PASSWORD)

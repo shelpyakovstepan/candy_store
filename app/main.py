@@ -11,14 +11,24 @@ from fastapi.templating import Jinja2Templates
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as aioredis
+from sqladmin import Admin
 
 # FIRSTPARTY
 from app.addresses.router import router as addresses_router
 from app.admin.router import router as admins_router
+from app.admin_app.auth import authentication_backend
+from app.admin_app.views import (
+    AddressesAdmin,
+    CartsAdmin,
+    CartsItemsAdmin,
+    OrdersAdmin,
+    ProductsAdmin,
+    UsersAdmin,
+)
 from app.carts.router import router as carts_router
 from app.cartsItems.router import router as carts_items_router
 from app.config import get_redis_url
-from app.database import check_db_connection
+from app.database import check_db_connection, engine
 from app.logger import logger
 from app.orders.router import router as orders_router
 from app.products.router import router as products_router
@@ -51,6 +61,15 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(lifespan=lifespan)
+
+admin = Admin(app, engine, authentication_backend=authentication_backend)
+
+admin.add_view(UsersAdmin)
+admin.add_view(AddressesAdmin)
+admin.add_view(ProductsAdmin)
+admin.add_view(CartsAdmin)
+admin.add_view(CartsItemsAdmin)
+admin.add_view(OrdersAdmin)
 app.include_router(users_router)
 app.include_router(admins_router)
 app.include_router(addresses_router)

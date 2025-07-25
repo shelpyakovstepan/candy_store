@@ -4,7 +4,7 @@ import enum
 # THIRDPARTY
 from sqlalchemy import ForeignKey
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 # FIRSTPARTY
 from app.database import Base
@@ -23,3 +23,10 @@ class Carts(Base):
     status: Mapped[StatusCartEnum] = mapped_column(
         postgresql.ENUM(StatusCartEnum), default=StatusCartEnum.ACTIVE, nullable=False
     )
+
+    user = relationship("Users", back_populates="cart")
+    carts_items = relationship("CartsItems", back_populates="cart")
+    order = relationship("Orders", back_populates="cart")
+
+    def __str__(self):
+        return f"{self.id}"

@@ -4,7 +4,7 @@ import enum
 # THIRDPARTY
 from sqlalchemy import ForeignKey
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 # FIRSTPARTY
 from app.database import Base
@@ -24,3 +24,9 @@ class Addresses(Base):
     building: Mapped[int]
     flat: Mapped[int] = mapped_column(nullable=False)
     entrance: Mapped[int]
+
+    user = relationship("Users", back_populates="address")
+    order = relationship("Orders", back_populates="address_")
+
+    def __str__(self):
+        return f"{self.street}"

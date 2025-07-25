@@ -73,6 +73,8 @@ services:
       ALGORITHM: "${ALGORITHM}"
 
       BOT_TOKEN: "${BOT_TOKEN}"
+
+      PASSWORD: "${PASSWORD}"
     restart: always
     depends_on:
       db:

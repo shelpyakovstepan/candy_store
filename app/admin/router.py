@@ -24,7 +24,7 @@ from app.users.dao import UsersDAO
 from app.users.schemas import SUsers
 
 router = APIRouter(
-    prefix="/admin",
+    prefix="/admins",
     tags=["Для админов"],
     dependencies=[Depends(check_admin_status)],
 )

@@ -6,7 +6,7 @@ import enum
 import pytz
 from sqlalchemy import ForeignKey, Text
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 # FIRSTPARTY
 from app.database import Base
@@ -52,3 +52,10 @@ class Orders(Base):
     status: Mapped[StatusEnum] = mapped_column(
         postgresql.ENUM(StatusEnum), nullable=False
     )
+
+    user = relationship("Users", back_populates="order")
+    address_ = relationship("Addresses", back_populates="order")
+    cart = relationship("Carts", back_populates="order")
+
+    def __str__(self):
+        return f"{self.id}"

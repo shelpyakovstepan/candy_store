@@ -33,7 +33,8 @@ dependencies = [
     "pytest-mock-resources (>=2.12.2,<3.0.0)",
     "joserfc (>=1.2.2,<2.0.0)",
     "faststream[rabbit] (>=0.5.47,<0.6.0)",
-    "kombu (>=5.5.4,<6.0.0)"
+    "kombu (>=5.5.4,<6.0.0)",
+    "sqladmin (>=0.21.0,<0.22.0)"
 ]
 
 

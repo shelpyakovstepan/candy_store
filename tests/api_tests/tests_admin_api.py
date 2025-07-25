@@ -51,7 +51,7 @@ class TestAdminApi:
         authenticated_ac: AsyncClient,
     ):
         response = await authenticated_ac.post(
-            "/admin/product",
+            "/admins/product",
             params={
                 "name": name,
                 "category": category,
@@ -102,7 +102,7 @@ class TestAdminApi:
         status_code,
     ):
         response = await authenticated_ac.patch(
-            f"/admin/product/{product_id}",
+            f"/admins/product/{product_id}",
             params={
                 "product_id": product_id,
                 "name": name,
@@ -130,7 +130,7 @@ class TestAdminApi:
         status_code,
     ):
         response = await authenticated_ac.delete(
-            "/admin/", params={"product_id": product_id}
+            "/admins/", params={"product_id": product_id}
         )
 
         assert response.status_code == status_code
@@ -151,7 +151,7 @@ class TestAdminApi:
         authenticated_ac: AsyncClient,
     ):
         response = await authenticated_ac.get(
-            "/admin/orders", params={"status__in": status__in}
+            "/admins/orders", params={"status__in": status__in}
         )
 
         assert response.status_code == status_code
@@ -174,7 +174,7 @@ class TestAdminApi:
         status_code,
     ):
         response = await authenticated_ac.patch(
-            f"/admin/update/{order_id}",
+            f"/admins/update/{order_id}",
             params={
                 "order_id": order_id,
                 "status": status,
@@ -197,7 +197,7 @@ class TestAdminApi:
         status_code,
     ):
         response = await authenticated_ac.patch(
-            "/admin//", params={"user_id": user_id, "admin_status": admin_status}
+            "/admins//", params={"user_id": user_id, "admin_status": admin_status}
         )
 
         assert response.status_code == status_code
