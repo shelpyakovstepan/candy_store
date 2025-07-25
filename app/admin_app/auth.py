@@ -27,7 +27,7 @@ class AdminAuth(AuthenticationBackend):
         form = await request.form()
         user_id, password = form["username"], form["password"]
 
-        user = await authenticate_user(int(user_id), password) # pyright: ignore [reportArgumentType]
+        user = await authenticate_user(int(user_id), password)  # pyright: ignore [reportArgumentType]
         if user:
             access_token = create_access_token({"sub": str(user.id)})
             request.session.update({"token": access_token})
