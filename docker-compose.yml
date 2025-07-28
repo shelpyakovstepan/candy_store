@@ -146,8 +146,9 @@ services:
     user: root
     volumes:
       - ./configs/filebeat/config.yml:/usr/share/filebeat/filebeat.yml
-      - /var/lib/docker/containers:/var/lib/docker/containers
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: bash -c "chmod go-w /usr/share/filebeat/filebeat.yml && filebeat -e"
     networks:
       - elk
 
