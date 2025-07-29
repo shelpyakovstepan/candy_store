@@ -17,9 +17,11 @@ async def authenticate_user(user_id: int, password: str):
     auth_user = await UsersDAO.find_by_id(user_id)
     if not auth_user:
         return None
-    if not verify_password(password, get_password_hash()):
-        return None
-    return auth_user
+    if auth_user.is_admin:
+        if not verify_password(password, get_password_hash()):
+            return None
+        return auth_user
+    return None
 
 
 class AdminAuth(AuthenticationBackend):
