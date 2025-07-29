@@ -15,6 +15,7 @@ class Users(Base):
     address = relationship("Addresses", back_populates="user")
     cart = relationship("Carts", back_populates="user")
     order = relationship("Orders", back_populates="user")
+    favourites = relationship("Favourites", back_populates="user")
 
     def __str__(self):
         return f"{self.id}"

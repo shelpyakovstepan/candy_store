@@ -21,6 +21,7 @@ from app.admin_app.views import (
     AddressesAdmin,
     CartsAdmin,
     CartsItemsAdmin,
+    FavouritesAdmin,
     OrdersAdmin,
     ProductsAdmin,
     UsersAdmin,
@@ -29,6 +30,7 @@ from app.carts.router import router as carts_router
 from app.cartsItems.router import router as carts_items_router
 from app.config import get_redis_url
 from app.database import check_db_connection, engine
+from app.favourites.router import router as favourites_router
 from app.logger import logger
 from app.orders.router import router as orders_router
 from app.products.router import router as products_router
@@ -67,6 +69,7 @@ admin = Admin(app, engine, authentication_backend=authentication_backend)
 admin.add_view(UsersAdmin)
 admin.add_view(AddressesAdmin)
 admin.add_view(ProductsAdmin)
+admin.add_view(FavouritesAdmin)
 admin.add_view(CartsAdmin)
 admin.add_view(CartsItemsAdmin)
 admin.add_view(OrdersAdmin)
@@ -75,6 +78,7 @@ app.include_router(admins_router)
 app.include_router(addresses_router)
 
 app.include_router(products_router)
+app.include_router(favourites_router)
 app.include_router(carts_router)
 
 app.include_router(carts_items_router)

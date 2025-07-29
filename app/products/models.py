@@ -40,6 +40,7 @@ class Products(Base):
     image_id: Mapped[int]
 
     carts_items = relationship("CartsItems", back_populates="product")
+    favourites = relationship("Favourites", back_populates="product")
 
     def __str__(self):
         return f"{self.name}"

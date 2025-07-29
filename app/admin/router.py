@@ -15,6 +15,7 @@ from app.exceptions import (
     NotUserException,
     ProductAlreadyExistsException,
 )
+from app.favourites.dao import FavouritesDAO
 from app.logger import logger
 from app.orders.dao import OrdersDAO, OrdersStatusFilter
 from app.orders.schemas import SOrders
@@ -80,7 +81,7 @@ async def update_product(
 
 
 @router.patch("/")
-async def update_product_status(
+async def change_product_status(
     product_id: int, status: Literal["ACTIVE", "INACTIVE"]
 ) -> SProducts:
     stored_product = await ProductsDAO.find_by_id(product_id)
@@ -94,6 +95,7 @@ async def update_product_status(
                 await CartsItemsDAO.delete(
                     product_id=product_id, cart_id=active_cart.id
                 )
+        await FavouritesDAO.delete(product_id=product_id)
 
     updated_product = await ProductsDAO.update(product_id, status=status)
     logger.info("Статус продукта успешно изменён")
@@ -145,12 +147,3 @@ async def change_admin_status(user_id: int, admin_status: bool) -> SUsers:
         raise NotUserException
 
     return user  # pyright: ignore [reportReturnType]
-
-
-# @router.patch("///")
-# async def update_cart_total_price(cart_id: int):
-#    cart = await CartsDAO.find_one_or_none(id=cart_id)
-#    if not cart:
-#        raise NotCartException
-#    updated_cart = await CartsDAO.update(model_id=cart_id, total_price=0)
-#    return updated_cart

@@ -18,6 +18,7 @@ from app.carts.models import Carts, StatusCartEnum
 from app.cartsItems.models import CartsItems
 from app.config import get_redis_url
 from app.database import async_session_maker
+from app.favourites.models import Favourites
 from app.logger import logger
 from app.main import app as fastapi_app
 from app.orders.models import (
@@ -119,6 +120,9 @@ async def create_user(
 
     delete_address_query = delete(Addresses).where(Addresses.user_id == id_)
     await get_session.execute(delete_address_query)
+
+    delete_favourites_items_query = delete(Favourites).where(Favourites.user_id == id_)
+    await get_session.execute(delete_favourites_items_query)
 
     query = delete(Users).where(
         and_(
@@ -263,6 +267,11 @@ async def create_product(
 
     yield product
 
+    delete_favourites_items_query = delete(Favourites).where(
+        Favourites.product_id == id_
+    )
+    await get_session.execute(delete_favourites_items_query)
+
     delete_carts_items_query = delete(CartsItems).where(CartsItems.product_id == id_)
     await get_session.execute(delete_carts_items_query)
     query = delete(Products).where(
@@ -271,6 +280,41 @@ async def create_product(
         )
     )
     await get_session.execute(query)
+    await get_session.commit()
+
+
+@pytest.fixture
+async def create_favourite(
+    get_session: AsyncSession,
+    create_user: Users,
+) -> AsyncGenerator[Carts, None]:
+    """Фикстура для создания тестовой позиции в избранном в БД.
+
+    Args:
+        get_session (AsyncSession): Асинхронная сессия базы данных
+        create_user: Экземпляр модели Users
+
+    Returns:
+        Carts: Экземпляр модели Favourites, представляющий созданную
+        позицию в избранном
+    """
+    id_ = 222222
+    user_id = 222222
+    product_id = 222222
+
+    favourite = Favourites(
+        id=id_,
+        user_id=user_id,
+        product_id=product_id,
+    )
+
+    get_session.add(favourite)
+    await get_session.commit()
+
+    yield favourite
+
+    delete_favourites_items_query = delete(Favourites).where(Favourites.id == id_)
+    await get_session.execute(delete_favourites_items_query)
     await get_session.commit()
 
 
@@ -381,10 +425,8 @@ async def authenticated_ac(create_user):
     async with AsyncClient(
         base_url="http://test", transport=httpx.ASGITransport(app=fastapi_app)
     ) as ac:
-        # access_token = create_access_token({"sub": str(create_user.id)})
         access_token = create_access_token({"sub": str(create_user.id)})
 
-        ## Устанавливаем куку напрямую в клиент
         ac.cookies = Cookies()
         ac.cookies.set("access_token", access_token)
         assert ac.cookies["access_token"]

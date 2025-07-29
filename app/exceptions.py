@@ -127,3 +127,13 @@ class YouCanNotPayOrderException(BaseAppException):
 class YouDoNotHaveCartItemsException(BaseAppException):
     status_code = status.HTTP_409_CONFLICT
     detail = "You don't have cart items"
+
+
+class FavouriteAlreadyExistsException(BaseAppException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = "Favourite already exists"
+
+
+class YouDoNotHaveFavouriteWithThisIdException(BaseAppException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = "You don't have favourite with this id"

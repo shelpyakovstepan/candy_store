@@ -12,6 +12,7 @@ from app.database import DATABASE_URL, Base
 from app.users.models import Users
 from app.addresses.models import Addresses
 from app.products.models import Products
+from app.favourites.models import Favourites
 from app.carts.models import Carts
 from app.cartsItems.models import CartsItems
 from app.orders.models import Orders
