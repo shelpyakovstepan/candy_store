@@ -36,7 +36,7 @@ async def get_products(
 
 @router.get("/{product_id}")
 async def get_product_by_id(product_id: int) -> SProducts:
-    product = await ProductsDAO.find_by_id(product_id)
+    product = await ProductsDAO.find_one_or_none(id=product_id, status="ACTIVE")
     if not product:
         raise NotProductsException
     return product

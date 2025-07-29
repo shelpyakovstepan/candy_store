@@ -5,7 +5,7 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel
 
 # FIRSTPARTY
-from app.products.models import UnitEnum
+from app.products.models import StatusProductEnum, UnitEnum
 
 
 class SProducts(BaseModel):
@@ -18,6 +18,7 @@ class SProducts(BaseModel):
     min_quantity: int
     max_quantity: int
     description: str
+    status: Literal[StatusProductEnum.ACTIVE, StatusProductEnum.INACTIVE]
     image_id: int
 
     class Config:

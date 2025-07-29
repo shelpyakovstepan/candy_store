@@ -27,7 +27,7 @@ router = APIRouter(
 async def add_cart_item(
     product_id: int, quantity: int = Query(gt=0), cart: Carts = Depends(get_users_cart)
 ) -> SCartsItem:
-    product = await ProductsDAO.find_by_id(product_id)
+    product = await ProductsDAO.find_one_or_none(id=product_id, status="ACTIVE")
     if not product:
         raise NotProductsException
 

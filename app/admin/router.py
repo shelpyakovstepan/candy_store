@@ -7,6 +7,7 @@ from fastapi_filter import FilterDepends
 
 # FIRSTPARTY
 from app.admin.dependencies import check_admin_status
+from app.carts.dao import CartsDAO
 from app.cartsItems.dao import CartsItemsDAO
 from app.exceptions import (
     NotOrdersException,
@@ -67,7 +68,7 @@ async def add_product(
 async def update_product(
     product_id: int,
     updated_product_data: SUpdateProduct = Depends(),
-) -> SProducts:
+):
     stored_product = await ProductsDAO.find_by_id(product_id)
     if not stored_product:
         raise NotProductsException
@@ -78,15 +79,25 @@ async def update_product(
     return updated_product  # pyright: ignore [reportReturnType]
 
 
-@router.delete("/")
-async def delete_product(product_id: int):
+@router.patch("/")
+async def update_product_status(
+    product_id: int, status: Literal["ACTIVE", "INACTIVE"]
+) -> SProducts:
     stored_product = await ProductsDAO.find_by_id(product_id)
     if not stored_product:
         raise NotProductsException
 
-    await CartsItemsDAO.delete(product_id=product_id)
-    await ProductsDAO.delete(id=product_id)
-    logger.info("Продукт успешно удалён")
+    if status == "INACTIVE":
+        all_active_carts = await CartsDAO.find_all(status="ACTIVE")
+        if all_active_carts:
+            for active_cart in all_active_carts:
+                await CartsItemsDAO.delete(
+                    product_id=product_id, cart_id=active_cart.id
+                )
+
+    updated_product = await ProductsDAO.update(product_id, status=status)
+    logger.info("Статус продукта успешно изменён")
+    return updated_product
 
 
 @router.get("/orders")

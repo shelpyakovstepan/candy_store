@@ -39,15 +39,17 @@ class ProductsDAO(BaseDao):
             async with async_session_maker() as session:
                 stored_product = select(Products).where(Products.id == product_id)
                 stored_product = await session.execute(stored_product)
+                stored_product = stored_product.scalar()
 
                 stored_product_dict = parse_obj_as(
-                    SProducts, stored_product.scalar()
+                    SProducts, stored_product
                 ).model_dump()
                 stored_product_model = SProducts(**stored_product_dict)
                 update_data = updated_product_data.model_dump(exclude_defaults=True)
                 updated_pr = stored_product_model.model_copy(update=update_data)
                 updated_pr = jsonable_encoder(updated_pr)
                 updated_pr["unit"] = updated_pr["unit"].upper()
+                updated_pr["status"] = updated_pr["status"].upper()
 
                 update_product_query = (
                     update(Products)
@@ -84,7 +86,9 @@ class ProductsDAO(BaseDao):
         try:
             async with async_session_maker() as session:
                 offset = (page - 1) * page_size
-                query_filter = products_filter.filter(select(Products))
+                query_filter = products_filter.filter(
+                    select(Products).where(Products.status == "ACTIVE")
+                )
                 filtered_data = await session.execute(
                     query_filter.offset(offset).limit(page_size)
                 )

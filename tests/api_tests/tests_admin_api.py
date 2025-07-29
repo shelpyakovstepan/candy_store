@@ -119,18 +119,20 @@ class TestAdminApi:
         assert response.status_code == status_code
 
     @pytest.mark.parametrize(
-        "product_id, status_code", [(222222, 200), (333333, 409), ("one", 422)]
+        "product_id, status, status_code",
+        [(222222, "INACTIVE", 200), (333333, "ACTIVE", 409), ("one", "INACTIVE", 422)],
     )
-    async def test_delete_product(
+    async def test_update_product_status(
         self,
         create_user,
         create_product,
         authenticated_ac: AsyncClient,
         product_id,
+        status,
         status_code,
     ):
-        response = await authenticated_ac.delete(
-            "/admins/", params={"product_id": product_id}
+        response = await authenticated_ac.patch(
+            "/admins/", params={"product_id": product_id, "status": status}
         )
 
         assert response.status_code == status_code

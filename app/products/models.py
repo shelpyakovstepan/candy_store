@@ -16,6 +16,11 @@ class UnitEnum(enum.Enum):
     KILOGRAMS = "kilograms"
 
 
+class StatusProductEnum(enum.Enum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+
+
 class Products(Base):
     __tablename__ = "products"
 
@@ -27,6 +32,11 @@ class Products(Base):
     min_quantity: Mapped[int] = mapped_column(nullable=False)
     max_quantity: Mapped[int] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[StatusProductEnum] = mapped_column(
+        postgresql.ENUM(StatusProductEnum),
+        default=StatusProductEnum.ACTIVE,
+        nullable=False,
+    )
     image_id: Mapped[int]
 
     carts_items = relationship("CartsItems", back_populates="product")
