@@ -70,7 +70,7 @@ services:
     image: elasticsearch:7.16.2
     volumes:
       - ./configs/elasticsearch/config.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
-      - ./docker_volumes/elasticsearch/data:/usr/share/elasticsearch/data
+      - fastapi_elasticsearch_data:/usr/share/elasticsearch/data
     env_file:
       - .env-non-dev
     environment:
@@ -130,6 +130,7 @@ services:
 
 volumes:
   fastapi_postgres_data:
+  fastapi_elasticsearch_data:
 
 networks:
   rabbitmq_network:

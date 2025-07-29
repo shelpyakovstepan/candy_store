@@ -93,7 +93,7 @@ services:
     image: elasticsearch:7.16.2
     volumes:
       - ./configs/elasticsearch/config.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
-      - ./docker_volumes/elasticsearch/data:/usr/share/elasticsearch/data
+      - fastapi_elasticsearch_data:/usr/share/elasticsearch/data
     environment:
       ELASTIC_USERNAME: "${ELASTIC_USERNAME}"
       ELASTIC_PASSWORD: "${ELASTIC_PASSWORD}"
@@ -154,6 +154,7 @@ services:
 
 volumes:
   fastapi_postgres_data:
+  fastapi_elasticsearch_data:
 
 networks:
   rabbitmq_network:
