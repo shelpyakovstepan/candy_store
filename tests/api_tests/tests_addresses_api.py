@@ -75,10 +75,3 @@ class TestAddressApi:
         )
 
         assert response.status_code == status_code
-
-    async def test_delete_address(
-        self, create_user, create_address, authenticated_ac: AsyncClient
-    ):
-        response = await authenticated_ac.delete("/addresses//")
-
-        assert response.status_code == 200

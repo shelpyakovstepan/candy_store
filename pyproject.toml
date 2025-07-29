@@ -34,7 +34,8 @@ dependencies = [
     "joserfc (>=1.2.2,<2.0.0)",
     "faststream[rabbit] (>=0.5.47,<0.6.0)",
     "kombu (>=5.5.4,<6.0.0)",
-    "sqladmin (>=0.21.0,<0.22.0)"
+    "sqladmin (>=0.21.0,<0.22.0)",
+    "pytest-cov (>=6.2.1,<7.0.0)"
 ]
 
 

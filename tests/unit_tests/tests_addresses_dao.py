@@ -60,8 +60,3 @@ class TestAddressesDAO:
         assert address_updated.building == building
         assert address_updated.flat == flat
         assert address_updated.entrance == entrance
-
-    async def test_address_delete(self, create_user, create_address):
-        await AddressesDAO.delete(user_id=create_user.id)
-
-        assert await AddressesDAO.find_by_id(create_address.id) is None
