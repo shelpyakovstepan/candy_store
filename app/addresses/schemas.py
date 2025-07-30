@@ -11,6 +11,7 @@ class SAddresses(BaseModel):
     building: int
     flat: int
     entrance: int
+    status: bool
 
 
 class SAddAndUpdateAddress(BaseModel):

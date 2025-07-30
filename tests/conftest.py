@@ -156,6 +156,7 @@ async def create_address(
     building = 1
     flat = 1
     entrance = 1
+    status = True
 
     address = Addresses(
         id=id_,
@@ -166,6 +167,7 @@ async def create_address(
         building=building,
         flat=flat,
         entrance=entrance,
+        status=status,
     )
 
     get_session.add(address)

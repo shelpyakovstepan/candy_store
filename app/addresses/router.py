@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from app.addresses.dao import AddressesDAO
 from app.addresses.dependencies import get_users_address
 from app.addresses.schemas import SAddAndUpdateAddress, SAddresses
-from app.exceptions import AddressAlreadyExistsException, NotAddressException
+from app.exceptions import AddressAlreadyExistsException
 from app.users.dependencies import get_current_user
 from app.users.models import Users
 
@@ -68,7 +68,7 @@ async def get_address(address: SAddresses = Depends(get_users_address)) -> SAddr
 @router.put("/")
 async def update_address(
     address_data: SAddAndUpdateAddress = Depends(),
-    user: Users = Depends(get_current_user),
+    address: SAddresses = Depends(get_users_address),
 ) -> SAddresses:
     """
     Город по умолчанию: Санкт-Петербург.
@@ -77,18 +77,14 @@ async def update_address(
 
     Args:
         address_data: Pydantic модель SAddAndUpdateAddress, содержащая данные для изменения адреса пользователя.
-        user: Экземпляр модели Users, представляющий текущего пользователя,
-        полученный через зависимость get_current_user().
+        address: Экземпляр модели Addresses, представляющий текущий адрес пользователя,
+        полученный через зависимость get_users_address().
 
     Returns:
         address: Экземпляр модели Addresses, представляющий изменённый адрес.
     """
-    stored_address = await AddressesDAO.find_one_or_none(user_id=user.id)
-    if not stored_address:
-        raise NotAddressException
-
-    address = await AddressesDAO.update(
-        stored_address.id,
+    address = await AddressesDAO.update( # pyright: ignore [reportAssignmentType]
+        address.id,
         street=address_data.street,
         house=address_data.house,
         building=address_data.building,

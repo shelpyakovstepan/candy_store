@@ -7,8 +7,9 @@ from fastapi import APIRouter, Depends, Query
 import pytz
 
 # FIRSTPARTY
+from app.addresses.dao import AddressesDAO
 from app.addresses.dependencies import get_users_address
-from app.addresses.models import Addresses
+from app.addresses.schemas import SAddresses
 from app.carts.dao import CartsDAO
 from app.carts.dependencies import get_users_cart
 from app.carts.models import Carts
@@ -45,7 +46,7 @@ async def create_order(
     comment: Optional[str] = Query("", max_length=100),
     user: Users = Depends(get_current_user),
     cart: Carts = Depends(get_users_cart),
-    address: Addresses = Depends(get_users_address),  # pyright: ignore [reportRedeclaration]
+    address: SAddresses = Depends(get_users_address),  # pyright: ignore [reportRedeclaration]
 ) -> SOrders:
     delta = date_receiving - datetime.now(pytz.timezone("Europe/Moscow")).date()
     if delta.days < 3:
@@ -73,6 +74,8 @@ async def create_order(
         payment=payment,
         comment=comment,  # pyright: ignore [reportArgumentType]
     )
+
+    await AddressesDAO.update(address.id, status=False)
     await CartsDAO.update(cart.id, status="INACTIVE")
     await send_message(
         {"chat_id": user.user_chat_id, "text": await user_orders_text(order=new_order)},  # pyright: ignore [reportArgumentType]

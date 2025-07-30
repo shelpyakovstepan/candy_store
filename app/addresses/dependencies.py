@@ -19,7 +19,7 @@ async def get_users_address(user: Users = Depends(get_current_user)) -> SAddress
     Returns:
         address: Экземпляр модели Addresses, представляющий текущий адрес пользователя.
     """
-    address = await AddressesDAO.find_one_or_none(user_id=user.id)
+    address = await AddressesDAO.find_one_or_none(user_id=user.id, status=True)
     if not address:
         raise NotAddressException
 

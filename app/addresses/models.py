@@ -24,6 +24,7 @@ class Addresses(Base):
     building: Mapped[int]
     flat: Mapped[int] = mapped_column(nullable=False)
     entrance: Mapped[int]
+    status: Mapped[bool] = mapped_column(default=True, nullable=False)
 
     user = relationship("Users", back_populates="address")
     order = relationship("Orders", back_populates="address_")
