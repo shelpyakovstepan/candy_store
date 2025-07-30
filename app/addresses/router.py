@@ -83,7 +83,7 @@ async def update_address(
     Returns:
         address: Экземпляр модели Addresses, представляющий изменённый адрес.
     """
-    address = await AddressesDAO.update( # pyright: ignore [reportAssignmentType]
+    address = await AddressesDAO.update(  # pyright: ignore [reportAssignmentType]
         address.id,
         street=address_data.street,
         house=address_data.house,
