@@ -13,6 +13,7 @@ from app.addresses.schemas import SAddresses
 from app.carts.dao import CartsDAO
 from app.carts.dependencies import get_users_cart
 from app.carts.models import Carts
+from app.database import DbSession
 from app.exceptions import (
     NotTrueTimeException,
     YouCanNotAddNewOrderException,
@@ -39,6 +40,7 @@ router = APIRouter(
 
 @router.post("/add")
 async def create_order(
+    session: DbSession,
     date_receiving: date,
     time_receiving: time,
     receiving_method: Literal["PICKUP", "DELIVERY"],
@@ -59,12 +61,13 @@ async def create_order(
         raise YouCanNotChooseThisPaymentException
 
     check_order = await OrdersDAO.find_one_or_none(
-        user_id=user.id, cart_id=cart.id, status="WAITING"
+        session, user_id=user.id, cart_id=cart.id, status="WAITING"
     )
     if check_order:
         raise YouCanNotAddNewOrderException
 
-    new_order = await OrdersDAO.add(
+    new_order = await OrdersDAO.add_order(
+        session,
         user_id=user.id,
         cart_id=cart.id,
         address=address.id,
@@ -75,10 +78,13 @@ async def create_order(
         comment=comment,  # pyright: ignore [reportArgumentType]
     )
 
-    await AddressesDAO.update(address.id, status=False)
-    await CartsDAO.update(cart.id, status="INACTIVE")
+    await AddressesDAO.update(session, address.id, status=False)
+    await CartsDAO.update(session, cart.id, status="INACTIVE")
     await send_message(
-        {"chat_id": user.user_chat_id, "text": await user_orders_text(order=new_order)},  # pyright: ignore [reportArgumentType]
+        {
+            "chat_id": user.user_chat_id,
+            "text": await user_orders_text(session, order=new_order),  # pyright: ignore [reportArgumentType]
+        },
         "messages-queue",
     )
     logger.info("Сообщение о заказе отправлено пользователю в телеграм")
@@ -87,26 +93,28 @@ async def create_order(
 
 @router.patch("/pay")
 async def pay_for_the_order(
+    session: DbSession,
     order_id: int,
 ) -> SOrders:
-    pay_order = await OrdersDAO.find_by_id(order_id)
+    pay_order = await OrdersDAO.find_by_id(session, order_id)
     if not pay_order:
         raise YouDoNotHaveOrdersException
 
     if pay_order.status != StatusEnum.WAITING:
         raise YouCanNotPayOrderException
 
-    pay_order = await OrdersDAO.update(order_id, status="PREPARING")
-    await send_message(await admin_orders_text(order=pay_order), "admin-queue")  # pyright: ignore [reportArgumentType]
+    pay_order = await OrdersDAO.update(session, order_id, status="PREPARING")
+    await send_message(await admin_orders_text(session, order=pay_order), "admin-queue")  # pyright: ignore [reportArgumentType]
 
     return pay_order
 
 
 @router.get("/")
 async def get_all_orders(
+    session: DbSession,
     user: Users = Depends(get_current_user),
 ) -> List[SOrders]:
-    orders = await OrdersDAO.find_all(user_id=user.id)
+    orders = await OrdersDAO.find_all(session, user_id=user.id)
     if not orders:
         raise YouDoNotHaveOrdersException
 
@@ -115,11 +123,14 @@ async def get_all_orders(
 
 @router.delete("/{order_id}")
 async def delete_order(
+    session: DbSession,
     order_id: int,
     user: Users = Depends(get_current_user),
 ):
-    check_order = await OrdersDAO.find_one_or_none(id=order_id, user_id=user.id)
+    check_order = await OrdersDAO.find_one_or_none(
+        session, id=order_id, user_id=user.id, status="WAITING"
+    )
     if not check_order:
         raise YouCanNotOrderByThisId
 
-    await OrdersDAO.delete(id=order_id)
+    await OrdersDAO.delete(session, id=order_id)

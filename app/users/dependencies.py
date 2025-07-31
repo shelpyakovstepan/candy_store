@@ -7,6 +7,7 @@ from jose import JWTError, jwt
 
 # FIRSTPARTY
 from app.config import settings
+from app.database import DbSession
 from app.exceptions import (
     IncorrectTokenFormatException,
     TokenAbsentException,
@@ -23,7 +24,7 @@ def get_token(request: Request):
     return token
 
 
-async def get_current_user(token: str = Depends(get_token)):
+async def get_current_user(session: DbSession, token: str = Depends(get_token)):
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, settings.ALGORITHM)
     except JWTError:
@@ -34,7 +35,7 @@ async def get_current_user(token: str = Depends(get_token)):
     user_id: str = payload.get("sub")  # pyright: ignore [reportAssignmentType]
     if not user_id:
         raise UserIsNotPresentException
-    user = await UsersDAO.find_by_id(int(user_id))
+    user = await UsersDAO.find_by_id(session, int(user_id))
     if not user:
         raise UserIsNotPresentException
 

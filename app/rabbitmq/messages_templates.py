@@ -1,6 +1,7 @@
 # FIRSTPARTY
 from app.addresses.dao import AddressesDAO
 from app.cartsItems.dao import CartsItemsDAO
+from app.database import DbSession
 from app.orders.models import (
     Orders,
     PaymentMethodEnum,
@@ -41,13 +42,13 @@ async def convert_status_to_users_view(status):
         return "Выполнен"
 
 
-async def create_orders_cart_items_text(cart_id):
-    carts_items = await CartsItemsDAO.find_all(cart_id=cart_id)
+async def create_orders_cart_items_text(session, cart_id):
+    carts_items = await CartsItemsDAO.find_all(session, cart_id=cart_id)
     carts_items_text = ""
     number = 0
     for cart_item in carts_items:
         number += 1
-        product = await ProductsDAO.find_by_id(cart_item.product_id)
+        product = await ProductsDAO.find_by_id(session, cart_item.product_id)
         carts_items_text += (
             f"{number})\nТовар: {product.name}\nКоличество: {cart_item.quantity}\n\n"
         )
@@ -83,9 +84,9 @@ async def create_text_by_order_status(order):
         return "\n"
 
 
-async def convert_address_to_users_view(order):
+async def convert_address_to_users_view(session, order):
     if order.receiving_method == ReceivingMethodEnum.DELIVERY:
-        address = await AddressesDAO.find_by_id(order.address)
+        address = await AddressesDAO.find_by_id(session, order.address)
         address_text = (
             f"Адрес:\n"
             f"Город: Санкт-Петербург\n"
@@ -109,12 +110,12 @@ async def convert_address_to_users_view(order):
     return address_text
 
 
-async def admin_orders_text(order: Orders):
+async def admin_orders_text(session: DbSession, order: Orders):
     admin_text_message = (
         f"Внимание! Пользователь с ID {order.user_id} создал заказ!\n"
         f"ID заказа: {order.id}\n"
         f"Состав заказа находится в корзине с ID: {order.cart_id}\n\n"
-        f"{await create_orders_cart_items_text(order.cart_id)}"
+        f"{await create_orders_cart_items_text(session, order.cart_id)}"
         f"Заказ создан: {order.created_at}\n"
         f"Дата получения: {order.date_receiving}\n"
         f"Время получения: {await convert_time_receiving_to_users_view(order.time_receiving)}\n"
@@ -123,17 +124,17 @@ async def admin_orders_text(order: Orders):
         f"Способ оплаты: {await convert_payment_to_users_view(order.payment)}\n"
         f"Стоимость заказа: {order.total_price}\n"
         f"Статус заказа: {await convert_status_to_users_view(order.status)}\n\n"
-        f"{await convert_address_to_users_view(order)}"
+        f"{await convert_address_to_users_view(session, order)}"
     )
 
     return admin_text_message
 
 
-async def user_orders_text(order: Orders):
+async def user_orders_text(session: DbSession, order: Orders):
     user_text_message = (
         f"Вы создали заказ!\n\n"
         f"Уникальный номер заказа: {order.id}\n\n"
-        f"{await create_orders_cart_items_text(order.cart_id)}"
+        f"{await create_orders_cart_items_text(session, order.cart_id)}"
         f"Заказ создан: {order.created_at}\n"
         f"Дата получения: {order.date_receiving}\n"
         f"Время получения: {await convert_time_receiving_to_users_view(order.time_receiving)}\n"
@@ -141,7 +142,7 @@ async def user_orders_text(order: Orders):
         f"Способ оплаты: {await convert_payment_to_users_view(order.payment)}\n"
         f"Стоимость заказа: {order.total_price}\n"
         f"Статус заказа: Ожидает оплаты\n\n"
-        f"{await convert_address_to_users_view(order)}"
+        f"{await convert_address_to_users_view(session, order)}"
         f"Пожалуйста, оплатите заказ на сайте, чтобы мы начали его готовить!\n"
         f"Мы будем уведомлять вас об статусе заказа!"
     )

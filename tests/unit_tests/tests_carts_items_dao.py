@@ -1,14 +1,20 @@
 # THIRDPARTY
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # FIRSTPARTY
 from app.cartsItems.dao import CartsItemsDAO
 
 
 class TestCartsItemsDAO:
-    async def test_carts_item_add(self, create_cart, create_product):
-        carts_item = await CartsItemsDAO.add(
-            cart_id=create_cart.id, product_id=create_product.id, quantity=5
+    async def test_carts_item_add(
+        self, get_session: AsyncSession, create_cart, create_product
+    ):
+        carts_item = await CartsItemsDAO.add_cart_item(
+            session=get_session,
+            cart_id=create_cart.id,
+            product_id=create_product.id,
+            quantity=5,
         )
 
         assert carts_item is not None
@@ -17,9 +23,11 @@ class TestCartsItemsDAO:
         assert carts_item.quantity == 5
 
     async def test_carts_item_find_all(
-        self, create_cart, create_product, create_carts_item
+        self, get_session: AsyncSession, create_cart, create_product, create_carts_item
     ):
-        carts_items = await CartsItemsDAO.find_all(cart_id=create_cart.id)
+        carts_items = await CartsItemsDAO.find_all(
+            session=get_session, cart_id=create_cart.id
+        )
         assert carts_items is not None
 
     @pytest.mark.parametrize(
@@ -31,6 +39,7 @@ class TestCartsItemsDAO:
     )
     async def test_carts_item_find_one_or_none(
         self,
+        get_session: AsyncSession,
         create_cart,
         create_product,
         create_carts_item,
@@ -39,7 +48,7 @@ class TestCartsItemsDAO:
         exists,
     ):
         carts_item = await CartsItemsDAO.find_one_or_none(
-            cart_id=cart_id, product_id=product_id
+            session=get_session, cart_id=cart_id, product_id=product_id
         )
 
         if exists:
@@ -57,17 +66,28 @@ class TestCartsItemsDAO:
         ],
     )
     async def test_update_carts_item(
-        self, create_cart, create_product, create_carts_item, action, quantity
+        self,
+        get_session: AsyncSession,
+        create_cart,
+        create_product,
+        create_carts_item,
+        action,
+        quantity,
     ):
         updated_carts_item = await CartsItemsDAO.update_carts_item(
-            cart_item_id=create_carts_item.id, action=action, quantity=quantity
+            session=get_session,
+            cart_item_id=create_carts_item.id,
+            action=action,
+            quantity=quantity,
         )
 
         assert updated_carts_item is not None
 
     async def test_carts_item_delete(
-        self, create_cart, create_product, create_carts_item
+        self, get_session: AsyncSession, create_cart, create_product, create_carts_item
     ):
-        await CartsItemsDAO.delete_carts_item(cart_item_id=create_carts_item.id)
+        await CartsItemsDAO.delete_carts_item(
+            session=get_session, cart_item_id=create_carts_item.id
+        )
 
-        assert await CartsItemsDAO.find_by_id(create_cart.id) is None
+        assert await CartsItemsDAO.find_by_id(get_session, create_cart.id) is None

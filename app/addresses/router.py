@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends
 from app.addresses.dao import AddressesDAO
 from app.addresses.dependencies import get_users_address
 from app.addresses.schemas import SAddAndUpdateAddress, SAddresses
+from app.database import DbSession
 from app.exceptions import AddressAlreadyExistsException
 from app.users.dependencies import get_current_user
 from app.users.models import Users
@@ -17,6 +18,7 @@ router = APIRouter(
 
 @router.post("")
 async def create_address(
+    session: DbSession,
     address_data: SAddAndUpdateAddress = Depends(),
     user: Users = Depends(get_current_user),
 ) -> SAddresses:
@@ -33,11 +35,14 @@ async def create_address(
     Returns:
         address: Экземпляр модели Addresses, представляющий созданный адрес.
     """
-    check_stored_address = await AddressesDAO.find_one_or_none(user_id=user.id)
+    check_stored_address = await AddressesDAO.find_one_or_none(
+        session, user_id=user.id, status=True
+    )
     if check_stored_address:
         raise AddressAlreadyExistsException
 
     address = await AddressesDAO.add(
+        session,
         user_id=user.id,
         city="SAINT_PETERSBURG",
         street=address_data.street,
@@ -67,6 +72,7 @@ async def get_address(address: SAddresses = Depends(get_users_address)) -> SAddr
 
 @router.put("/")
 async def update_address(
+    session: DbSession,
     address_data: SAddAndUpdateAddress = Depends(),
     address: SAddresses = Depends(get_users_address),
 ) -> SAddresses:
@@ -84,6 +90,7 @@ async def update_address(
         address: Экземпляр модели Addresses, представляющий изменённый адрес.
     """
     address = await AddressesDAO.update(  # pyright: ignore [reportAssignmentType]
+        session,
         address.id,
         street=address_data.street,
         house=address_data.house,

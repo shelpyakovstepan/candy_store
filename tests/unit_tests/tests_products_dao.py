@@ -1,5 +1,6 @@
 # THIRDPARTY
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # FIRSTPARTY
 from app.products.dao import ProductsDAO, ProductsFilter
@@ -11,9 +12,17 @@ class TestProductsDAO:
         [("Not_exists_name", "Торты", False), ("Торт обычный", "Торты", True)],
     )
     async def test_products_find_one_or_none(
-        self, create_user, create_product, name, category, exists
+        self,
+        get_session: AsyncSession,
+        create_user,
+        create_product,
+        name,
+        category,
+        exists,
     ):
-        product = await ProductsDAO.find_one_or_none(name=name, category=category)
+        product = await ProductsDAO.find_one_or_none(
+            session=get_session, name=name, category=category
+        )
 
         if exists:
             assert product is not None
@@ -24,9 +33,9 @@ class TestProductsDAO:
 
     @pytest.mark.parametrize("product_id, exists", [(333333, False), (222222, True)])
     async def test_products_find_by_id(
-        self, create_user, create_product, product_id, exists
+        self, get_session: AsyncSession, create_user, create_product, product_id, exists
     ):
-        product = await ProductsDAO.find_by_id(product_id)
+        product = await ProductsDAO.find_by_id(get_session, product_id)
         if exists:
             assert product is not None
             assert product.id == product_id
@@ -52,6 +61,7 @@ class TestProductsDAO:
     )
     async def test_products_update(
         self,
+        get_session: AsyncSession,
         create_user,
         create_product,
         product_id,
@@ -66,6 +76,7 @@ class TestProductsDAO:
         image_id,
     ):
         updated_product = await ProductsDAO.update(
+            get_session,
             product_id,
             name=name,
             category=category,
@@ -95,6 +106,7 @@ class TestProductsDAO:
     )
     async def test_products_find_all(
         self,
+        get_session: AsyncSession,
         create_user,
         create_product,
         page,
@@ -107,13 +119,18 @@ class TestProductsDAO:
             name__in=name__in, category__in=category__in, price__lte=price__lte
         )
 
-        products = await ProductsDAO.find_all(
-            page=page, page_size=page_size, products_filter=products_filter
+        products = await ProductsDAO.find_all_products(
+            session=get_session,
+            page=page,
+            page_size=page_size,
+            products_filter=products_filter,
         )
 
         assert products is not None
 
-    async def test_products_delete(self, create_user, create_product):
-        await ProductsDAO.delete(id=create_product.id)
+    async def test_products_delete(
+        self, get_session: AsyncSession, create_user, create_product
+    ):
+        await ProductsDAO.delete(session=get_session, id=create_product.id)
 
-        assert await ProductsDAO.find_by_id(create_product.id) is None
+        assert await ProductsDAO.find_by_id(get_session, create_product.id) is None

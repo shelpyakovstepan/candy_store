@@ -4,24 +4,26 @@ from starlette.requests import Request
 
 # FIRSTPARTY
 from app.config import get_password_hash, pwd_context
+from app.database import SessionLocal
 from app.users.auth import create_access_token
 from app.users.dao import UsersDAO
 from app.users.dependencies import get_current_user
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
+async def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 
 async def authenticate_user(user_id: int, password: str):
-    auth_user = await UsersDAO.find_by_id(user_id)
-    if not auth_user:
-        return None
-    if auth_user.is_admin:
-        if not verify_password(password, get_password_hash()):
+    async with SessionLocal() as session:
+        auth_user = await UsersDAO.find_by_id(session, user_id)
+        if not auth_user:
             return None
-        return auth_user
-    return None
+        if auth_user.is_admin:
+            if not await verify_password(password, get_password_hash()):
+                return None
+            return auth_user
+        return None
 
 
 class AdminAuth(AuthenticationBackend):
@@ -45,12 +47,13 @@ class AdminAuth(AuthenticationBackend):
 
         if not token:
             return False
-        user = await get_current_user(token)
+        async with SessionLocal() as session:
+            user = await get_current_user(session=session, token=token)
 
-        if not user:
-            return False
+            if not user:
+                return False
 
-        return True
+            return True
 
 
 authentication_backend = AdminAuth(secret_key="...")

@@ -9,6 +9,7 @@ from fastapi.responses import PlainTextResponse, RedirectResponse
 
 # FIRSTPARTY
 from app.config import get_bot_token_hash
+from app.database import DbSession
 from app.logger import logger
 from app.users.auth import create_access_token
 from app.users.dao import UsersDAO
@@ -23,6 +24,7 @@ router = APIRouter(
 
 @router.get("/telegram-callback")
 async def telegram_callback(
+    session: DbSession,
     request: Request,
     user_id: Annotated[int, Query(alias="id")],
     query_hash: Annotated[str, Query(alias="hash")],
@@ -41,9 +43,10 @@ async def telegram_callback(
             "Authorization failed. Please try again", status_code=401
         )
 
-    new_user = await UsersDAO.find_one_or_none(user_chat_id=user_id)
+    new_user = await UsersDAO.find_one_or_none(session, user_chat_id=user_id)
     if not new_user:
         new_user = await UsersDAO.add(
+            session,
             user_chat_id=user_id,
         )
         logger.info("User successfully registered")

@@ -17,7 +17,7 @@ from app.addresses.models import Addresses, CityEnum
 from app.carts.models import Carts, StatusCartEnum
 from app.cartsItems.models import CartsItems
 from app.config import get_redis_url
-from app.database import async_session_maker
+from app.database import SessionLocal
 from app.favourites.models import Favourites
 from app.logger import logger
 from app.main import app as fastapi_app
@@ -51,8 +51,8 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
     Yields:
         AsyncSession: Асинхронная сессия SQLAlchemy для проведения тестов.
     """
-    test_session = async_session_maker
-    async with test_session() as t_session:
+    get_session = SessionLocal
+    async with get_session() as t_session:
         try:
             yield t_session
         finally:

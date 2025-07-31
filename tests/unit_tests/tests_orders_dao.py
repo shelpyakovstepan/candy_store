@@ -3,6 +3,7 @@ from datetime import datetime
 
 # THIRDPARTY
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # FIRSTPARTY
 from app.orders.dao import OrdersDAO, OrdersStatusFilter
@@ -15,8 +16,10 @@ class TestOrdersDAO:
     )
     async def test_orders_add(
         self,
+        get_session: AsyncSession,
         create_address,
         create_product,
+        create_cart,
         create_carts_item,
         cart_id,
         date_receiving,
@@ -28,7 +31,8 @@ class TestOrdersDAO:
         date_receiving = datetime.strptime(date_receiving, "%Y-%m-%d").date()
         time_receiving = datetime.strptime(time_receiving, "%H:%M").time()
 
-        order = await OrdersDAO.add(
+        order = await OrdersDAO.add_order(
+            session=get_session,
             user_id=create_address.user_id,
             cart_id=cart_id,
             address=create_address.id,
@@ -50,6 +54,7 @@ class TestOrdersDAO:
     @pytest.mark.parametrize("user_id, exists", [(333333, False), (222222, True)])
     async def test_orders_find_all(
         self,
+        get_session: AsyncSession,
         create_address,
         create_product,
         create_carts_item,
@@ -57,7 +62,7 @@ class TestOrdersDAO:
         user_id,
         exists,
     ):
-        orders = await OrdersDAO.find_all(user_id=user_id)
+        orders = await OrdersDAO.find_all(session=get_session, user_id=user_id)
 
         if exists:
             assert orders is not None
@@ -73,6 +78,7 @@ class TestOrdersDAO:
     )
     async def test_orders_find_one_or_none(
         self,
+        get_session: AsyncSession,
         create_address,
         create_product,
         create_carts_item,
@@ -83,7 +89,7 @@ class TestOrdersDAO:
         exists,
     ):
         order = await OrdersDAO.find_one_or_none(
-            user_id=user_id, cart_id=cart_id, status=status
+            session=get_session, user_id=user_id, cart_id=cart_id, status=status
         )
 
         if exists:
@@ -101,6 +107,7 @@ class TestOrdersDAO:
     )
     async def test_find_all_users_orders(
         self,
+        get_session: AsyncSession,
         create_address,
         create_product,
         create_carts_item,
@@ -113,6 +120,7 @@ class TestOrdersDAO:
 
         assert (
             await OrdersDAO.find_all_users_orders(
+                session=get_session,
                 page=page,
                 page_size=page_size,
                 orders_status_filter=orders_status_filter,
@@ -121,8 +129,13 @@ class TestOrdersDAO:
         )
 
     async def test_orders_delete(
-        self, create_address, create_product, create_carts_item, create_order
+        self,
+        get_session: AsyncSession,
+        create_address,
+        create_product,
+        create_carts_item,
+        create_order,
     ):
-        await OrdersDAO.delete(id=create_order.id)
+        await OrdersDAO.delete(session=get_session, id=create_order.id)
 
-        assert await OrdersDAO.find_by_id(create_order.id) is None
+        assert await OrdersDAO.find_by_id(get_session, create_order.id) is None

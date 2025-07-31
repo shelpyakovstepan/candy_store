@@ -9,6 +9,7 @@ from fastapi_filter import FilterDepends
 from app.admin.dependencies import check_admin_status
 from app.carts.dao import CartsDAO
 from app.cartsItems.dao import CartsItemsDAO
+from app.database import DbSession
 from app.exceptions import (
     NotOrdersException,
     NotProductsException,
@@ -35,6 +36,7 @@ router = APIRouter(
 
 @router.post("/product")
 async def add_product(
+    session: DbSession,
     name: str,
     category: Literal["Торты", "Пряники"],
     ingredients: List[str],
@@ -45,11 +47,12 @@ async def add_product(
     description: str,
     image_id: int,
 ) -> SProducts:
-    product = await ProductsDAO.find_one_or_none(name=name, category=category)
+    product = await ProductsDAO.find_one_or_none(session, name=name, category=category)
     if product:
         raise ProductAlreadyExistsException
 
     product = await ProductsDAO.add(
+        session,
         name=name,
         category=category,
         ingredients=ingredients,
@@ -67,14 +70,17 @@ async def add_product(
 
 @router.patch("/product/{product_id}")
 async def update_product(
+    session: DbSession,
     product_id: int,
     updated_product_data: SUpdateProduct = Depends(),
 ):
-    stored_product = await ProductsDAO.find_by_id(product_id)
+    stored_product = await ProductsDAO.find_by_id(session, product_id)
     if not stored_product:
         raise NotProductsException
 
-    updated_product = await ProductsDAO.update_product(product_id, updated_product_data)
+    updated_product = await ProductsDAO.update_product(
+        session, product_id, updated_product_data
+    )
 
     logger.info("Продукт успешно изменён")
     return updated_product  # pyright: ignore [reportReturnType]
@@ -82,34 +88,38 @@ async def update_product(
 
 @router.patch("/")
 async def change_product_status(
-    product_id: int, status: Literal["ACTIVE", "INACTIVE"]
-) -> SProducts:
-    stored_product = await ProductsDAO.find_by_id(product_id)
+    session: DbSession, product_id: int, status: Literal["ACTIVE", "INACTIVE"]
+):
+    stored_product = await ProductsDAO.find_by_id(session, product_id)
     if not stored_product:
         raise NotProductsException
 
     if status == "INACTIVE":
-        all_active_carts = await CartsDAO.find_all(status="ACTIVE")
+        all_active_carts = await CartsDAO.find_all(session, status="ACTIVE")
         if all_active_carts:
             for active_cart in all_active_carts:
                 await CartsItemsDAO.delete(
-                    product_id=product_id, cart_id=active_cart.id
+                    session, product_id=product_id, cart_id=active_cart.id
                 )
-        await FavouritesDAO.delete(product_id=product_id)
+        await FavouritesDAO.delete(session, product_id=product_id)
 
-    updated_product = await ProductsDAO.update(product_id, status=status)
+    updated_product = await ProductsDAO.update(session, product_id, status=status)
     logger.info("Статус продукта успешно изменён")
     return updated_product
 
 
 @router.get("/orders")
 async def get_all_users_orders(
+    session: DbSession,
     page: int = Query(1, ge=1),
     page_size: int = Query(5, le=10, ge=5),
     orders_status_filter: OrdersStatusFilter = FilterDepends(OrdersStatusFilter),
 ):
     orders = await OrdersDAO.find_all_users_orders(
-        page=page, page_size=page_size, orders_status_filter=orders_status_filter
+        session,
+        page=page,
+        page_size=page_size,
+        orders_status_filter=orders_status_filter,
     )
 
     if not orders:
@@ -120,15 +130,15 @@ async def get_all_users_orders(
 
 @router.patch("/update/{order_id}")
 async def change_order_status(
-    order_id: int, status: Literal["READY", "DELIVERY", "COMPLETED"]
+    session: DbSession, order_id: int, status: Literal["READY", "DELIVERY", "COMPLETED"]
 ) -> SOrders:
-    order = await OrdersDAO.find_by_id(order_id)
+    order = await OrdersDAO.find_by_id(session, order_id)
     if not order:
         raise NotOrdersException
 
-    user = await UsersDAO.find_by_id(order.user_id)
+    user = await UsersDAO.find_by_id(session, order.user_id)
 
-    updated_order = await OrdersDAO.update(order_id, status=status)
+    updated_order = await OrdersDAO.update(session, order_id, status=status)
     await send_message(
         {
             "chat_id": user.user_chat_id,  # pyright: ignore [reportOptionalMemberAccess]
@@ -140,9 +150,11 @@ async def change_order_status(
 
 
 @router.patch("//")
-async def change_admin_status(user_id: int, admin_status: bool) -> SUsers:
+async def change_admin_status(
+    session: DbSession, user_id: int, admin_status: bool
+) -> SUsers:
     """Изменяет статус админа пользователя."""
-    user = await UsersDAO.update(user_id, is_admin=admin_status)
+    user = await UsersDAO.update(session, user_id, is_admin=admin_status)
     if not user:
         raise NotUserException
 
