@@ -45,7 +45,7 @@ from app.users.models import Users
 #        await connection.run_sync(Base.metadata.create_all)
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """Фикстура для создания экземпляра сессии базы данных для тестов.
 
@@ -58,7 +58,6 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
             yield session
         finally:
             await session.rollback()
-
 
 
 @pytest.fixture(scope="function")

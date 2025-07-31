@@ -11,14 +11,14 @@ class TestCartsItemsApi:
         ],
     )
     async def test_right_add_cart_item(
-            self,
-            create_user,
-            create_product,
-            create_cart,
-            product_id,
-            quantity,
-            status_code,
-            authenticated_ac: AsyncClient,
+        self,
+        create_user,
+        create_product,
+        create_cart,
+        product_id,
+        quantity,
+        status_code,
+        authenticated_ac: AsyncClient,
     ):
         response = await authenticated_ac.post(
             "/cartsitems/add", params={"product_id": product_id, "quantity": quantity}

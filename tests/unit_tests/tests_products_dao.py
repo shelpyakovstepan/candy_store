@@ -7,7 +7,7 @@ from app.products.dao import ProductsDAO, ProductsFilter
 
 
 class TestProductsDAO:
-    #@pytest.mark.parametrize(
+    # @pytest.mark.parametrize(
     #    "name, category, ingredients, unit, price, min_quantity, max_quantity, description, image_id",
     #    [
     #        (
@@ -22,8 +22,8 @@ class TestProductsDAO:
     #                1,
     #        )
     #    ],
-    #)
-    #async def test_products_add(
+    # )
+    # async def test_products_add(
     #        self,
     #        get_session: AsyncSession,
     #        create_user,
@@ -36,7 +36,7 @@ class TestProductsDAO:
     #        max_quantity,
     #        description,
     #        image_id,
-    #):
+    # ):
     #    added_product = await ProductsDAO.add(
     #        session=get_session,
     #        name=name,
@@ -49,7 +49,7 @@ class TestProductsDAO:
     #        description=description,
     #        image_id=image_id,
     #    )
-#
+    #
     #    assert added_product is not None
     #    assert added_product.name == name
     #    assert added_product.category == category
@@ -59,9 +59,9 @@ class TestProductsDAO:
     #    assert added_product.max_quantity == max_quantity
     #    assert added_product.description == description
     #    assert added_product.image_id == image_id
-#
-#
-#
+    #
+    #
+    #
     @pytest.mark.parametrize(
         "name, category, exists",
         [("Not_exists_name", "Торты", False), ("Торт обычный", "Торты", True)],

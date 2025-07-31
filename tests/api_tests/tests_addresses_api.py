@@ -6,20 +6,18 @@ import pytest
 class TestAddressApi:
     @pytest.mark.parametrize(
         "street,house,building,flat,entrance,status_code",
-        [
-            ("Улица", 1, 1, 1, 1, 200)
-        ],
+        [("Улица", 1, 1, 1, 1, 200)],
     )
     async def test_right_create_address(
-            self,
-            create_user,
-            street,
-            house,
-            building,
-            flat,
-            entrance,
-            status_code,
-            authenticated_ac: AsyncClient,
+        self,
+        create_user,
+        street,
+        house,
+        building,
+        flat,
+        entrance,
+        status_code,
+        authenticated_ac: AsyncClient,
     ):
         response = await authenticated_ac.post(
             "/addresses",
