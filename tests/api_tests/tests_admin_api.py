@@ -31,10 +31,9 @@ class TestAdminApi:
                 1,
                 422,
             ),
-            # ("Торт обычный", "Торты", "KILOGRAMS", 2500, 2, 6, "description", 1, 409),
         ],
     )
-    async def test_add_product(
+    async def test_wrong_add_product(
         self,
         create_user,
         create_product,

@@ -36,6 +36,7 @@ from app.users.models import Users
 #    async with engine.begin() as connection:
 #        await connection.execute(text("DROP TABLE orders CASCADE"))
 #        await connection.execute(text("DROP TABLE addresses CASCADE"))
+#        await connection.execute(text("DROP TABLE favourites CASCADE"))
 #        query = delete(CartsItems)
 #        await connection.execute(query)
 #        await connection.execute(text("DROP TABLE products CASCADE"))
@@ -44,19 +45,20 @@ from app.users.models import Users
 #        await connection.run_sync(Base.metadata.create_all)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope='function')
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """Фикстура для создания экземпляра сессии базы данных для тестов.
 
     Yields:
         AsyncSession: Асинхронная сессия SQLAlchemy для проведения тестов.
     """
-    get_session = SessionLocal
-    async with get_session() as t_session:
+    test_session = SessionLocal
+    async with test_session() as session:
         try:
-            yield t_session
+            yield session
         finally:
-            await t_session.rollback()
+            await session.rollback()
+
 
 
 @pytest.fixture(scope="function")

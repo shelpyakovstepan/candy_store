@@ -23,7 +23,7 @@ class TestOrdersApi:
             ("2100-01-01", "12:00", "DELIVERY", "NONCASH", "comment", 409),
         ],
     )
-    async def test_create_order(
+    async def test_wrong_create_order(
         self,
         create_user,
         create_address,

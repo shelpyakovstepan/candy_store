@@ -7,6 +7,28 @@ class TestCartsItemsApi:
     @pytest.mark.parametrize(
         "product_id,quantity,status_code",
         [
+            (222222, 4, 200),
+        ],
+    )
+    async def test_right_add_cart_item(
+            self,
+            create_user,
+            create_product,
+            create_cart,
+            product_id,
+            quantity,
+            status_code,
+            authenticated_ac: AsyncClient,
+    ):
+        response = await authenticated_ac.post(
+            "/cartsitems/add", params={"product_id": product_id, "quantity": quantity}
+        )
+
+        assert response.status_code == status_code
+
+    @pytest.mark.parametrize(
+        "product_id,quantity,status_code",
+        [
             (333333, 3, 409),
             ("one", 3, 422),
             (222222, 0, 422),
@@ -15,7 +37,7 @@ class TestCartsItemsApi:
             (222222, 4, 409),
         ],
     )
-    async def test_add_cart_item(
+    async def test_wrong_add_cart_item(
         self,
         create_user,
         create_product,
