@@ -1,0 +1,164 @@
+services:
+  db:
+    image: postgres:17
+    container_name: candy_store_db
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    ports:
+      - "5432:5432"
+    volumes:
+      - fastapi_postgres_data:/var/lib/postgresql/data
+    networks:
+      - rabbitmq_network
+
+  redis:
+    image: redis:7
+    container_name: booking_redis
+    environment:
+      REDIS_HOST: "${REDIS_HOST}"
+      REDIS_PORT: "${REDIS_PORT}"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+    networks:
+      - rabbitmq_network
+
+  rabbitmq:
+    image: rabbitmq:4.1.1-management
+    container_name: daily_planner_rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_DEFAULT_USER}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_DEFAULT_PASS}"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    hostname: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - rabbitmq_network
+
+  candy_store:
+    image: candy_store_image:latest
+    build:
+      context: .
+    container_name: candy_store_app
+    environment:
+      MODE: "${MODE}"
+
+      DB_HOST: "${POSTGRES_HOST}"
+      DB_PORT: "${POSTGRES_PORT}"
+      DB_USER: "${POSTGRES_USER}"
+      DB_PASS: "${POSTGRES_PASSWORD}"
+      DB_NAME: "${POSTGRES_DB}"
+
+      REDIS_HOST: "${REDIS_HOST}"
+      REDIS_PORT: "${REDIS_PORT}"
+
+      RABBIT_USER: "${RABBITMQ_DEFAULT_USER}"
+      RABBIT_PASS: "${RABBITMQ_DEFAULT_PASS}"
+      RABBIT_HOST: "${RABBIT_HOST}"
+      RABBIT_PORT: "${RABBIT_PORT}"
+
+      SECRET_KEY: "${SECRET_KEY}"
+      ALGORITHM: "${ALGORITHM}"
+
+      BOT_TOKEN: "${BOT_TOKEN}"
+
+      PASSWORD: "${PASSWORD}"
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    command: [ "bash", "/candy_store/docker/app.sh" ]
+    ports:
+      - "7777:8000"
+    networks:
+      - rabbitmq_network
+
+  elasticsearch:
+    image: elasticsearch:7.16.2
+    volumes:
+      - ./configs/elasticsearch/config.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      - fastapi_elasticsearch_data:/usr/share/elasticsearch/data
+    environment:
+      ELASTIC_USERNAME: "${ELASTIC_USERNAME}"
+      ELASTIC_PASSWORD: "${ELASTIC_PASSWORD}"
+      ES_JAVA_OPTS: "-Xmx512m -Xms512m"
+      discovery.type: single-node
+    networks:
+      - elk
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+
+  logstash:
+    image: logstash:7.16.2
+    depends_on:
+      - elasticsearch
+    volumes:
+      - ./configs/logstash/config.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./configs/logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
+      - ./configs/logstash/pipelines:/usr/share/logstash/config/pipelines:ro
+    environment:
+      LS_JAVA_OPTS: "-Xmx512m -Xms512m"
+      ELASTIC_USERNAME: "${ELASTIC_USERNAME}"
+      ELASTIC_PASSWORD: "${ELASTIC_PASSWORD}"
+    ports:
+      - "5044:5044"
+      - "5000:5000"
+      - "9600:9600"
+    networks:
+      - elk
+
+
+  kibana:
+    image: kibana:7.16.1
+    depends_on:
+      - elasticsearch
+    environment:
+      ELASTIC_USERNAME: "${ELASTIC_USERNAME}"
+      ELASTIC_PASSWORD: "${ELASTIC_PASSWORD}"
+    volumes:
+      - ./configs/kibana/config.yml:/usr/share/kibana/config/kibana.yml:ro
+    networks:
+      - elk
+    ports:
+      - "5601:5601"
+
+  beats:
+    image: elastic/filebeat:7.16.2
+    depends_on:
+      - elasticsearch
+    user: root
+    volumes:
+      - ./configs/filebeat/config.yml:/usr/share/filebeat/filebeat.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: filebeat -e -strict.perms=false
+    networks:
+      - elk
+
+volumes:
+  fastapi_postgres_data:
+  fastapi_elasticsearch_data:
+
+networks:
+  rabbitmq_network:
+    name: rabbitmq_network
+    driver: bridge
+  elk:
+    driver: bridge

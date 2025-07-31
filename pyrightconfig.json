@@ -1,0 +1,16 @@
+{
+  "include": [
+    "app",
+    "tests"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "migrations"
+  ],
+
+  "reportGeneralTypeIssues": false,
+  "reportReturnType": false,
+
+  "pythonVersion": "3.12"
+}

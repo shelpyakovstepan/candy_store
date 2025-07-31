@@ -1,0 +1,46 @@
+# STDLIB
+import enum
+from typing import List
+
+# THIRDPARTY
+from sqlalchemy import ARRAY, String, Text
+from sqlalchemy.dialects import postgresql
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+# FIRSTPARTY
+from app.database import Base
+
+
+class UnitEnum(enum.Enum):
+    PIECES = "pieces"
+    KILOGRAMS = "kilograms"
+
+
+class StatusProductEnum(enum.Enum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+
+
+class Products(Base):
+    __tablename__ = "products"
+
+    name: Mapped[str] = mapped_column(nullable=False)
+    category: Mapped[str] = mapped_column(nullable=False)
+    ingredients: Mapped[List[str]] = mapped_column(ARRAY(String))
+    unit: Mapped[UnitEnum] = mapped_column(postgresql.ENUM(UnitEnum), nullable=False)
+    price: Mapped[int] = mapped_column(nullable=False)
+    min_quantity: Mapped[int] = mapped_column(nullable=False)
+    max_quantity: Mapped[int] = mapped_column(nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[StatusProductEnum] = mapped_column(
+        postgresql.ENUM(StatusProductEnum),
+        default=StatusProductEnum.ACTIVE,
+        nullable=False,
+    )
+    image_id: Mapped[int]
+
+    carts_items = relationship("CartsItems", back_populates="product")
+    favourites = relationship("Favourites", back_populates="product")
+
+    def __str__(self):
+        return f"{self.name}"

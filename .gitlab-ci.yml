@@ -1,0 +1,73 @@
+stages:
+  - build
+  - run
+  - lint
+  - test
+  - cleanup
+  - deploy
+
+build-job:
+  stage: build
+  environment:
+    name: dev
+  script:
+    - docker compose -f docker-compose.yml build
+
+run-job:
+  stage: run
+  environment:
+    name: dev
+  needs: [build-job]
+  script:
+    - docker compose -f docker-compose.yml up -d
+
+lint-test-job:
+  stage: lint
+  environment:
+    name: dev
+  needs: [run-job]
+  script:
+    - echo "Проверка форматирования кода с помощью ruff..."
+    - docker compose exec -it candy_store ruff format --config ruff.toml --check app tests
+
+    - echo "Проверка типов с помощью pyright..."
+    - docker compose exec -it candy_store pyright app tests
+
+    - echo "Проверка стиля кода с помощью ruff..."
+    - docker compose exec -it candy_store ruff check --config ruff.toml app tests
+
+    - echo "Проверка сортировки импортов с помощью isort..."
+    - docker compose exec -it candy_store isort --check-only --diff app tests
+
+test-job:
+  stage: test
+  environment:
+    name: dev
+  needs: [lint-test-job]
+  script:
+    - echo "Начало тестирования"
+    - docker compose exec candy_store pytest -s -v
+
+
+cleanup-job:
+  stage: cleanup
+  environment:
+    name: dev
+  needs: [run-job, test-job]
+  script:
+    - docker compose -f docker-compose.yml down
+    - docker container prune -f
+    - docker volume prune -f
+    - docker system prune -f
+  when: always
+
+
+deploy-job:
+  stage: deploy
+  environment:
+    name: dev
+  needs: [test-job]
+  script:
+    - docker compose -f docker-compose.yml build
+    - docker compose -f docker-compose.yml up -d
+  when: manual

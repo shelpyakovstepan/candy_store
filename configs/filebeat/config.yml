@@ -1,0 +1,21 @@
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+        - "/var/lib/docker/containers/*/*-json.log"
+    parsers:
+      - ndjson:
+          keys_under_root: true
+          add_error_key: true
+
+    processors:
+      - add_docker_metadata: ~
+
+      - drop_event:
+          when:
+            not:
+              regexp:
+                container.labels.com_docker_compose_service: "candy_store"
+
+output.logstash:
+  hosts: ["logstash:5044"]
