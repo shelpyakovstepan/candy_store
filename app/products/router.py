@@ -2,15 +2,14 @@
 from typing import List
 
 # THIRDPARTY
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends
 from fastapi_cache.decorator import cache
-from fastapi_filter import FilterDepends
 
 # FIRSTPARTY
 from app.database import DbSession
 from app.exceptions import NotProductsException
-from app.products.dao import ProductsDAO, ProductsFilter
-from app.products.schemas import SProducts
+from app.products.dao import ProductsDAO
+from app.products.schemas import SGetProducts, SProducts
 
 router = APIRouter(
     prefix="/products",
@@ -21,13 +20,23 @@ router = APIRouter(
 @router.get("/")
 @cache(expire=30)
 async def get_products(
-    session: DbSession,
-    page: int = Query(1, ge=1),
-    page_size: int = Query(5, le=10, ge=5),
-    products_filter: ProductsFilter = FilterDepends(ProductsFilter),
+    session: DbSession, find_product_data: SGetProducts = Depends()
 ) -> List[SProducts]:
+    """
+    Отдаёт все товары с возможностью фильтрации.
+
+    Args:
+        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
+        find_product_data: Pydantic модель SGetProducts, содержащая данные для извлечения товаров.
+
+    Returns:
+        products: Список экземпляров модели Products, представляющий все товары.
+    """
     products = await ProductsDAO.find_all_products(
-        session, page=page, page_size=page_size, products_filter=products_filter
+        session,
+        page=find_product_data.page,
+        page_size=find_product_data.page_size,
+        products_filter=find_product_data.products_filter,
     )
 
     if not products:
@@ -38,6 +47,16 @@ async def get_products(
 
 @router.get("/{product_id}")
 async def get_product_by_id(session: DbSession, product_id: int) -> SProducts:
+    """
+    Отдаёт товар по ID.
+
+    Args:
+        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
+        product_id: ID товара, который должен быть получен.
+
+    Returns:
+         product: Экземпляр модели Products, представляющий товар с указанным ID.
+    """
     product = await ProductsDAO.find_one_or_none(
         session, id=product_id, status="ACTIVE"
     )

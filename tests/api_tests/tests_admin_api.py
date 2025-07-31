@@ -103,7 +103,7 @@ class TestAdminApi:
         response = await authenticated_ac.patch(
             f"/admins/product/{product_id}",
             params={
-                "product_id": product_id,
+                "id": product_id,
                 "name": name,
                 "category": category,
                 "unit": unit,

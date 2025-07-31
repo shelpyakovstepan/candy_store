@@ -17,6 +17,7 @@ async def get_users_address(
     Отдаёт текущий адрес пользователя.
 
     Args:
+        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
         user: Экземпляр модели Users, представляющий текущего пользователя, полученный через зависимость get_current_user().
 
     Returns:

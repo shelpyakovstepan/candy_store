@@ -2,10 +2,13 @@
 from typing import List, Literal, Optional
 
 # THIRDPARTY
-from pydantic import BaseModel
+from fastapi import Query
+from fastapi_filter import FilterDepends
+from fastapi_filter.contrib.sqlalchemy import Filter
+from pydantic import BaseModel, Field
 
 # FIRSTPARTY
-from app.products.models import StatusProductEnum, UnitEnum
+from app.products.models import Products, StatusProductEnum, UnitEnum
 
 
 class SProducts(BaseModel):
@@ -26,6 +29,7 @@ class SProducts(BaseModel):
 
 
 class SUpdateProduct(BaseModel):
+    id: int
     name: Optional[str] = None
     category: Optional[Literal["Торты", "Пряники"]] = None
     ingredients: Optional[List[str]] = []
@@ -38,3 +42,35 @@ class SUpdateProduct(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class SAddProduct(BaseModel):
+    name: str
+    category: Literal["Торты", "Пряники"]
+    ingredients: List[str]
+    unit: Literal["PIECES", "KILOGRAMS"]
+    price: int
+    min_quantity: int
+    max_quantity: int
+    description: str
+    image_id: int
+
+
+class SChangeProductStatus(BaseModel):
+    product_id: int
+    status: Literal["ACTIVE", "INACTIVE"]
+
+
+class ProductsFilter(Filter):
+    name__in: Optional[list[str]] = Field(default=None)
+    category__in: Optional[list[str]] = Field(default=None)
+    price__lte: Optional[int] = Field(default=None)
+
+    class Constants(Filter.Constants):
+        model = Products
+
+
+class SGetProducts(BaseModel):
+    page: int = Query(1, ge=1)
+    page_size: int = Query(5, le=10, ge=5)
+    products_filter: ProductsFilter = FilterDepends(ProductsFilter)

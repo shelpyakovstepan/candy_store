@@ -13,4 +13,14 @@ router = APIRouter(
 
 @router.get("/")
 async def get_cart(cart: Carts = Depends(get_users_cart)):
+    """
+    Отдаёт текущую корзину пользователя.
+
+    Args:
+        cart: Экземпляр модели Carts, представляющий текущую корзину пользователя,
+        полученный через зависимость get_users_cart().
+
+    Returns:
+        cart: Экземпляр модели Carts, представляющий текущую корзину пользователя.
+    """
     return cart

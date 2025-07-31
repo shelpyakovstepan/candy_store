@@ -18,6 +18,7 @@ from app.users.dao import UsersDAO
 
 
 def get_token(request: Request):
+    """Отдаёт токен из куки файлов (access_token)"""
     token = request.cookies.get("access_token")
     if not token:
         raise TokenAbsentException
@@ -25,6 +26,16 @@ def get_token(request: Request):
 
 
 async def get_current_user(session: DbSession, token: str = Depends(get_token)):
+    """
+    Отдаёт текущего пользователя.
+
+    Args:
+        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
+        token: Токен из куки файлов (access_token), полученный через зависимость get_token().
+
+    Returns:
+        user: Экземпляр модели Users, представляющий текущего пользователя.
+    """
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, settings.ALGORITHM)
     except JWTError:

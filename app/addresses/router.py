@@ -28,6 +28,7 @@ async def create_address(
     Создаёт адрес пользователя.
 
     Args:
+        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
         address_data: Pydantic модель SAddAndUpdateAddress, содержащая данные для добавления адреса пользователя.
         user: Экземпляр модели Users, представляющий текущего пользователя,
         полученный через зависимость get_current_user().
@@ -82,6 +83,7 @@ async def update_address(
     Изменяет адрес пользователя.
 
     Args:
+        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
         address_data: Pydantic модель SAddAndUpdateAddress, содержащая данные для изменения адреса пользователя.
         address: Экземпляр модели Addresses, представляющий текущий адрес пользователя,
         полученный через зависимость get_users_address().

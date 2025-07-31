@@ -1,9 +1,9 @@
 # STDLIB
-from datetime import date, datetime, time
-from typing import List, Literal, Optional
+from datetime import datetime
+from typing import List
 
 # THIRDPARTY
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 import pytz
 
 # FIRSTPARTY
@@ -26,7 +26,7 @@ from app.exceptions import (
 from app.logger import logger
 from app.orders.dao import OrdersDAO
 from app.orders.models import StatusEnum
-from app.orders.schemas import SOrders
+from app.orders.schemas import SCreateOrder, SOrders
 from app.rabbitmq.base import send_message
 from app.rabbitmq.messages_templates import admin_orders_text, user_orders_text
 from app.users.dependencies import get_current_user
@@ -41,23 +41,36 @@ router = APIRouter(
 @router.post("/add")
 async def create_order(
     session: DbSession,
-    date_receiving: date,
-    time_receiving: time,
-    receiving_method: Literal["PICKUP", "DELIVERY"],
-    payment: Literal["CASH", "NONCASH"],
-    comment: Optional[str] = Query("", max_length=100),
+    order_data: SCreateOrder = Depends(),
     user: Users = Depends(get_current_user),
     cart: Carts = Depends(get_users_cart),
     address: SAddresses = Depends(get_users_address),  # pyright: ignore [reportRedeclaration]
 ) -> SOrders:
-    delta = date_receiving - datetime.now(pytz.timezone("Europe/Moscow")).date()
+    """
+    Создаёт новый заказ и отправляет уведомление пользователю.
+
+    Args:
+        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
+        order_data: Pydantic модель SCreateOrder, содержащая данные для добавления нового заказа.
+        user: Экземпляр модели Users, представляющий текущего пользователя, полученный через зависимость get_current_user().
+        cart: Экземпляр модели Carts, представляющий текущую корзину пользователя,
+        полученный через зависимость get_users_cart().
+        address: Экземпляр модели Addresses, представляющий текущий адрес пользователя,
+        полученный через зависимость get_users_address().
+
+    Returns:
+        new_order: Экземпляр модели Orders, представляющий созданный заказ.
+    """
+    delta = (
+        order_data.date_receiving - datetime.now(pytz.timezone("Europe/Moscow")).date()
+    )
     if delta.days < 3:
         raise NotTrueTimeException
 
     if cart.total_price == 0:
         raise YouDoNotHaveCartItemsException
 
-    if receiving_method == "DELIVERY" and payment == "CASH":
+    if order_data.receiving_method == "DELIVERY" and order_data.payment == "CASH":
         raise YouCanNotChooseThisPaymentException
 
     check_order = await OrdersDAO.find_one_or_none(
@@ -71,11 +84,11 @@ async def create_order(
         user_id=user.id,
         cart_id=cart.id,
         address=address.id,
-        date_receiving=date_receiving,
-        time_receiving=time_receiving,
-        receiving_method=receiving_method,
-        payment=payment,
-        comment=comment,  # pyright: ignore [reportArgumentType]
+        date_receiving=order_data.date_receiving,
+        time_receiving=order_data.time_receiving,
+        receiving_method=order_data.receiving_method,
+        payment=order_data.payment,
+        comment=order_data.comment,  # pyright: ignore [reportArgumentType]
     )
 
     await AddressesDAO.update(session, address.id, status=False)
@@ -96,6 +109,16 @@ async def pay_for_the_order(
     session: DbSession,
     order_id: int,
 ) -> SOrders:
+    """
+    Оплачивает заказ и меняет его статус.
+
+    Args:
+        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
+        order_id: ID заказа, который должен быть оплачен.
+
+    Returns:
+        pay_order: Экземпляр модели Orders, представляющий оплаченный заказ.
+    """
     pay_order = await OrdersDAO.find_by_id(session, order_id)
     if not pay_order:
         raise YouDoNotHaveOrdersException
@@ -114,6 +137,16 @@ async def get_all_orders(
     session: DbSession,
     user: Users = Depends(get_current_user),
 ) -> List[SOrders]:
+    """
+    Отдаёт все заказы пользователя.
+
+    Args:
+        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
+        user: Экземпляр модели Users, представляющий текущего пользователя, полученный через зависимость get_current_user().
+
+    Returns:
+        orders: Список экземпляров модели Orders, представляющий все заказы пользователя.
+    """
     orders = await OrdersDAO.find_all(session, user_id=user.id)
     if not orders:
         raise YouDoNotHaveOrdersException
@@ -127,6 +160,17 @@ async def delete_order(
     order_id: int,
     user: Users = Depends(get_current_user),
 ):
+    """
+    Удаляет существующий заказ.
+
+    Args:
+        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
+        order_id: ID заказа, который должен быть удалён.
+        user: Экземпляр модели Users, представляющий текущего пользователя, полученный через зависимость get_current_user().
+
+    Returns:
+        None
+    """
     check_order = await OrdersDAO.find_one_or_none(
         session, id=order_id, user_id=user.id, status="WAITING"
     )

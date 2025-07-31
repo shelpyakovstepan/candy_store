@@ -1,27 +1,16 @@
 # STDLIB
 import math
-from typing import Optional
 
 # THIRDPARTY
 from fastapi.encoders import jsonable_encoder
-from fastapi_filter.contrib.sqlalchemy import Filter
-from pydantic import Field, parse_obj_as
+from pydantic import parse_obj_as
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # FIRSTPARTY
 from app.dao.base import BaseDao
 from app.products.models import Products
-from app.products.schemas import SProducts, SUpdateProduct
-
-
-class ProductsFilter(Filter):
-    name__in: Optional[list[str]] = Field(default=None)
-    category__in: Optional[list[str]] = Field(default=None)
-    price__lte: Optional[int] = Field(default=None)
-
-    class Constants(Filter.Constants):
-        model = Products
+from app.products.schemas import ProductsFilter, SProducts, SUpdateProduct
 
 
 class ProductsDAO(BaseDao):

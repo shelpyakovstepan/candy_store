@@ -1,9 +1,5 @@
-# STDLIB
-from typing import List, Literal
-
 # THIRDPARTY
-from fastapi import APIRouter, Depends, Query
-from fastapi_filter import FilterDepends
+from fastapi import APIRouter, Depends
 
 # FIRSTPARTY
 from app.admin.dependencies import check_admin_status
@@ -18,14 +14,19 @@ from app.exceptions import (
 )
 from app.favourites.dao import FavouritesDAO
 from app.logger import logger
-from app.orders.dao import OrdersDAO, OrdersStatusFilter
-from app.orders.schemas import SOrders
+from app.orders.dao import OrdersDAO
+from app.orders.schemas import SChangeOrderStatus, SGetAllOrders, SOrders
 from app.products.dao import ProductsDAO
-from app.products.schemas import SProducts, SUpdateProduct
+from app.products.schemas import (
+    SAddProduct,
+    SChangeProductStatus,
+    SProducts,
+    SUpdateProduct,
+)
 from app.rabbitmq.base import send_message
 from app.rabbitmq.messages_templates import update_user_orders_text
 from app.users.dao import UsersDAO
-from app.users.schemas import SUsers
+from app.users.schemas import SChangeAdminStatus, SUsers
 
 router = APIRouter(
     prefix="/admins",
@@ -36,32 +37,35 @@ router = APIRouter(
 
 @router.post("/product")
 async def add_product(
-    session: DbSession,
-    name: str,
-    category: Literal["Торты", "Пряники"],
-    ingredients: List[str],
-    unit: Literal["PIECES", "KILOGRAMS"],
-    price: int,
-    min_quantity: int,
-    max_quantity: int,
-    description: str,
-    image_id: int,
+    session: DbSession, product_data: SAddProduct = Depends()
 ) -> SProducts:
-    product = await ProductsDAO.find_one_or_none(session, name=name, category=category)
+    """
+    Создаёт новый продукт.
+
+    Args:
+        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
+        product_data: Pydantic модель SAddProduct, содержащая данные для добавления нового товара.
+
+    Returns:
+        product: Экземпляр модели Products, представляющий созданный товар.
+    """
+    product = await ProductsDAO.find_one_or_none(
+        session, name=product_data.name, category=product_data.category
+    )
     if product:
         raise ProductAlreadyExistsException
 
     product = await ProductsDAO.add(
         session,
-        name=name,
-        category=category,
-        ingredients=ingredients,
-        unit=unit,
-        price=price,
-        min_quantity=min_quantity,
-        max_quantity=max_quantity,
-        description=description,
-        image_id=image_id,
+        name=product_data.name,
+        category=product_data.category,
+        ingredients=product_data.ingredients,
+        unit=product_data.unit,
+        price=product_data.price,
+        min_quantity=product_data.min_quantity,
+        max_quantity=product_data.max_quantity,
+        description=product_data.description,
+        image_id=product_data.image_id,
     )
 
     logger.info("Продукт успешно добавлен")
@@ -71,15 +75,24 @@ async def add_product(
 @router.patch("/product/{product_id}")
 async def update_product(
     session: DbSession,
-    product_id: int,
     updated_product_data: SUpdateProduct = Depends(),
 ):
-    stored_product = await ProductsDAO.find_by_id(session, product_id)
+    """
+     Изменяет существующий товар.
+
+    Args:
+         session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
+         updated_product_data: Pydantic модель SUpdateProduct, содержащая данные для изменения товара.
+
+     Returns:
+         updated_product: Экземпляр модели Products, представляющий изменённый товар.
+    """
+    stored_product = await ProductsDAO.find_by_id(session, updated_product_data.id)
     if not stored_product:
         raise NotProductsException
 
     updated_product = await ProductsDAO.update_product(
-        session, product_id, updated_product_data
+        session, updated_product_data.id, updated_product_data
     )
 
     logger.info("Продукт успешно изменён")
@@ -88,22 +101,42 @@ async def update_product(
 
 @router.patch("/")
 async def change_product_status(
-    session: DbSession, product_id: int, status: Literal["ACTIVE", "INACTIVE"]
+    session: DbSession, change_product_status_data: SChangeProductStatus = Depends()
 ):
-    stored_product = await ProductsDAO.find_by_id(session, product_id)
+    """
+    Изменяет статус существующего товар.
+
+    Args:
+        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
+        change_product_status_data: Pydantic модель SChangeProductStatus, содержащая данные для изменения статуса товара.
+
+    Returns:
+        updated_product: Экземпляр модели Products, представляющий товар с изменённым статусом.
+    """
+    stored_product = await ProductsDAO.find_by_id(
+        session, change_product_status_data.product_id
+    )
     if not stored_product:
         raise NotProductsException
 
-    if status == "INACTIVE":
+    if change_product_status_data.status == "INACTIVE":
         all_active_carts = await CartsDAO.find_all(session, status="ACTIVE")
         if all_active_carts:
             for active_cart in all_active_carts:
                 await CartsItemsDAO.delete(
-                    session, product_id=product_id, cart_id=active_cart.id
+                    session,
+                    product_id=change_product_status_data.product_id,
+                    cart_id=active_cart.id,
                 )
-        await FavouritesDAO.delete(session, product_id=product_id)
+        await FavouritesDAO.delete(
+            session, product_id=change_product_status_data.product_id
+        )
 
-    updated_product = await ProductsDAO.update(session, product_id, status=status)
+    updated_product = await ProductsDAO.update(
+        session,
+        change_product_status_data.product_id,
+        status=change_product_status_data.status,
+    )
     logger.info("Статус продукта успешно изменён")
     return updated_product
 
@@ -111,15 +144,23 @@ async def change_product_status(
 @router.get("/orders")
 async def get_all_users_orders(
     session: DbSession,
-    page: int = Query(1, ge=1),
-    page_size: int = Query(5, le=10, ge=5),
-    orders_status_filter: OrdersStatusFilter = FilterDepends(OrdersStatusFilter),
+    get_all_orders_data: SGetAllOrders = Depends(),
 ):
+    """
+    Отдаёт все заказы пользователей с возможностью фильтрации.
+
+    Args:
+        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
+        get_all_orders_data: Pydantic модель SGetAllOrders, содержащая данные для извлечения заказов.
+
+    Returns:
+        orders: Список экземпляров модели Orders, представляющий полученные заказы.
+    """
     orders = await OrdersDAO.find_all_users_orders(
         session,
-        page=page,
-        page_size=page_size,
-        orders_status_filter=orders_status_filter,
+        page=get_all_orders_data.page,
+        page_size=get_all_orders_data.page_size,
+        orders_status_filter=get_all_orders_data.orders_status_filter,
     )
 
     if not orders:
@@ -130,15 +171,29 @@ async def get_all_users_orders(
 
 @router.patch("/update/{order_id}")
 async def change_order_status(
-    session: DbSession, order_id: int, status: Literal["READY", "DELIVERY", "COMPLETED"]
+    session: DbSession, change_order_status_data: SChangeOrderStatus = Depends()
 ) -> SOrders:
-    order = await OrdersDAO.find_by_id(session, order_id)
+    """
+    Изменяет статус существующего заказа и отправляет уведомление пользователю.
+
+    Args:
+        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
+        change_order_status_data: Pydantic модель SChangeOrderStatus, содержащая данные для изменения статуса заказа.
+
+    Returns:
+        order: Экземпляр модели Orders, представляющий заказ с изменённым статусом.
+    """
+    order = await OrdersDAO.find_by_id(session, change_order_status_data.order_id)
     if not order:
         raise NotOrdersException
 
     user = await UsersDAO.find_by_id(session, order.user_id)
 
-    updated_order = await OrdersDAO.update(session, order_id, status=status)
+    updated_order = await OrdersDAO.update(
+        session,
+        change_order_status_data.order_id,
+        status=change_order_status_data.status,
+    )
     await send_message(
         {
             "chat_id": user.user_chat_id,  # pyright: ignore [reportOptionalMemberAccess]
@@ -151,10 +206,23 @@ async def change_order_status(
 
 @router.patch("//")
 async def change_admin_status(
-    session: DbSession, user_id: int, admin_status: bool
+    session: DbSession, change_admin_status_data: SChangeAdminStatus = Depends()
 ) -> SUsers:
-    """Изменяет статус админа пользователя."""
-    user = await UsersDAO.update(session, user_id, is_admin=admin_status)
+    """
+    Изменяет статус админа пользователя.
+
+    Args:
+        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
+        change_admin_status_data: Pydantic модель SChangeAdminStatus, содержащая данные для изменения статуса админа пользователя.
+
+    Returns:
+        user: Экземпляр модели Users, представляющий пользователя с изменённым статусом админа.
+    """
+    user = await UsersDAO.update(
+        session,
+        change_admin_status_data.user_id,
+        is_admin=change_admin_status_data.admin_status,
+    )
     if not user:
         raise NotUserException
 

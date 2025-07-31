@@ -1,11 +1,8 @@
 # STDLIB
 from datetime import date, time
 import math
-from typing import Literal, Optional
 
 # THIRDPARTY
-from fastapi_filter.contrib.sqlalchemy import Filter
-from pydantic import Field
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,17 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.carts.models import Carts
 from app.dao.base import BaseDao
 from app.orders.models import Orders
-
-
-class OrdersStatusFilter(Filter):
-    status__in: Optional[
-        list[Literal["WAITING", "PREPARING", "READY", "DELIVERY", "COMPLETED"]]
-    ] = Field(
-        default=None,
-    )
-
-    class Constants(Filter.Constants):
-        model = Orders
+from app.orders.schemas import OrdersStatusFilter
 
 
 class OrdersDAO(BaseDao):

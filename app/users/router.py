@@ -30,6 +30,7 @@ async def telegram_callback(
     query_hash: Annotated[str, Query(alias="hash")],
     next_url: Annotated[str, Query(alias="next")] = "/",
 ):
+    """Осуществляет аутентификацию и авторизацию пользователя через Телеграм"""
     params = request.query_params.items()
     data_check_string = "\n".join(
         sorted(f"{x}={y}" for x, y in params if x not in ("hash", "next"))
@@ -60,6 +61,7 @@ async def telegram_callback(
 
 @router.get("/logout")
 async def logout():
+    """Осуществляет выход пользователя из системы"""
     response = RedirectResponse("/")
     response.delete_cookie(
         key="access_token",
@@ -69,5 +71,13 @@ async def logout():
 
 @router.get("/me")
 async def get_me(user: Users = Depends(get_current_user)):
-    """Выдаёт информацию пользователю о самом себе."""
+    """
+    Выдаёт информацию пользователю о самом себе.
+
+    Args:
+        user: Экземпляр модели Users, представляющий текущего пользователя, полученный через зависимость get_current_user().
+
+    Returns:
+        user: Экземпляр модели Users, представляющий пользователя.
+    """
     return user
