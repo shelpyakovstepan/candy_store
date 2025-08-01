@@ -12,10 +12,12 @@ from app.products.dao import ProductsDAO
 
 
 async def convert_time_receiving_to_users_view(time_receiving):
+    """Конвертирует время в пользовательский вид."""
     return str(time_receiving)[:5]
 
 
 async def convert_receiving_method_to_users_view(receiving_method):
+    """Конвертирует метод получения заказа в пользовательский вид."""
     if receiving_method == ReceivingMethodEnum.DELIVERY:
         return "Доставка"
     if receiving_method == ReceivingMethodEnum.PICKUP:
@@ -23,6 +25,7 @@ async def convert_receiving_method_to_users_view(receiving_method):
 
 
 async def convert_payment_to_users_view(payment):
+    """Конвертирует метод оплаты заказа в пользовательский вид."""
     if payment == PaymentMethodEnum.NONCASH:
         return "Безналичный"
     if payment == PaymentMethodEnum.CASH:
@@ -30,6 +33,7 @@ async def convert_payment_to_users_view(payment):
 
 
 async def convert_status_to_users_view(status):
+    """Конвертирует статус заказа в пользовательский вид."""
     if status == StatusEnum.WAITING:
         return "Ожидает оплаты"
     if status == StatusEnum.PREPARING:
@@ -43,6 +47,7 @@ async def convert_status_to_users_view(status):
 
 
 async def create_orders_cart_items_text(session, cart_id):
+    """Создаёт информацию о товарах в заказе для пользователя."""
     carts_items = await CartsItemsDAO.find_all(session, cart_id=cart_id)
     carts_items_text = ""
     number = 0
@@ -56,6 +61,7 @@ async def create_orders_cart_items_text(session, cart_id):
 
 
 async def create_text_by_order_status(order):
+    """Создаёт информацию о статусе заказа для пользователя."""
     if order.status == StatusEnum.WAITING:
         return (
             "Пожалуйста, оплатите заказ на сайте, чтобы мы начали его готовить!\n"
@@ -85,6 +91,7 @@ async def create_text_by_order_status(order):
 
 
 async def convert_address_to_users_view(session, order):
+    """Конвертирует адрес в пользовательский вид."""
     if order.receiving_method == ReceivingMethodEnum.DELIVERY:
         address = await AddressesDAO.find_by_id(session, order.address)
         address_text = (
@@ -111,6 +118,7 @@ async def convert_address_to_users_view(session, order):
 
 
 async def admin_orders_text(session: DbSession, order: Orders):
+    """Создаёт сообщение о заказе, предназначенное для админов."""
     admin_text_message = (
         f"Внимание! Пользователь с ID {order.user_id} создал заказ!\n"
         f"ID заказа: {order.id}\n"
@@ -131,6 +139,7 @@ async def admin_orders_text(session: DbSession, order: Orders):
 
 
 async def user_orders_text(session: DbSession, order: Orders):
+    """Создаёт сообщение о заказе, предназначенное для пользователя."""
     user_text_message = (
         f"Вы создали заказ!\n\n"
         f"Уникальный номер заказа: {order.id}\n\n"
@@ -151,6 +160,7 @@ async def user_orders_text(session: DbSession, order: Orders):
 
 
 async def update_user_orders_text(order: Orders):
+    """Создаёт сообщение об изменении статуса заказа, предназначенное для пользователя."""
     update_user_orders_message = (
         f"Ваш заказ с уникальным номером {order.id} обновлён!\n\n"
         f"Статус заказа: {await convert_status_to_users_view(order.status)}\n\n"

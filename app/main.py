@@ -39,6 +39,7 @@ from app.users.router import router as users_router
 
 
 async def redis_connection():
+    """Проверяет подключение к Redis."""
     redis = aioredis.from_url(get_redis_url())
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
 
@@ -109,6 +110,7 @@ async def middleware(request: Request, call_next):
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
+    """Определяет время выполнения любого запроса."""
     start_time = time.perf_counter()
     response = await call_next(request)
     process_time = time.perf_counter() - start_time

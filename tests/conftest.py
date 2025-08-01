@@ -65,7 +65,7 @@ async def get_redis():
     """Фикстура для создания Redis для тестов.
 
     Yields:
-        Подключение к Redis
+        Подключение к Redis.
     """
     redis = aioredis.from_url(get_redis_url())
     FastAPICache.init(RedisBackend(redis), prefix="test_fastapi-cache")
@@ -91,11 +91,11 @@ async def create_user(
     """Фикстура для создания тестового пользователя в БД.
 
     Args:
-        get_session (AsyncSession): Асинхронная сессия базы данных
+        get_session (AsyncSession): Асинхронная сессия базы данных.
 
     Returns:
         Users: Экземпляр модели Users, представляющий созданного
-        пользователя
+        пользователя.
     """
     id_ = 222222
     user_chat_id = 11111
@@ -142,12 +142,12 @@ async def create_address(
     """Фикстура для создания тестового адреса пользователя в БД.
 
     Args:
-        get_session (AsyncSession): Асинхронная сессия базы данных
-        create_user: Экземпляр модели Users
+        get_session (AsyncSession): Асинхронная сессия базы данных.
+        create_user: Экземпляр модели Users.
 
     Returns:
         Addresses: Экземпляр модели Addresses, представляющий созданный
-        адрес
+        адрес.
     """
     id_ = 222222
     user_id = 222222
@@ -193,12 +193,12 @@ async def create_cart(
     """Фикстура для создания тестовой корзины в БД.
 
     Args:
-        get_session (AsyncSession): Асинхронная сессия базы данных
-        create_user: Экземпляр модели Users
+        get_session (AsyncSession): Асинхронная сессия базы данных.
+        create_user: Экземпляр модели Users.
 
     Returns:
         Carts: Экземпляр модели Carts, представляющий созданную
-        корзину
+        корзину.
     """
     id_ = 222222
     user_id = 222222
@@ -235,11 +235,11 @@ async def create_product(
     """Фикстура для создания тестового продукта в БД.
 
     Args:
-        get_session (AsyncSession): Асинхронная сессия базы данных
+        get_session (AsyncSession): Асинхронная сессия базы данных.
 
     Returns:
         Products: Экземпляр модели Products, представляющий созданный
-        продукт
+        продукт.
     """
     id_ = 222222
     name = "Торт обычный"
@@ -295,11 +295,11 @@ async def create_favourite(
 
     Args:
         get_session (AsyncSession): Асинхронная сессия базы данных
-        create_user: Экземпляр модели Users
+        create_user: Экземпляр модели Users.
 
     Returns:
         Carts: Экземпляр модели Favourites, представляющий созданную
-        позицию в избранном
+        позицию в избранном.
     """
     id_ = 222222
     user_id = 222222
@@ -329,12 +329,12 @@ async def create_carts_item(
     """Фикстура для создания тестового товара в корзине в БД.
 
     Args:
-        get_session (AsyncSession): Асинхронная сессия базы данных
-        create_cart: Экземпляр модели Carts
+        get_session (AsyncSession): Асинхронная сессия базы данных.
+        create_cart: Экземпляр модели Carts.
 
     Returns:
         CartsItems: Экземпляр модели CartsItems, представляющий созданный
-        товар в корзине
+        товар в корзине.
     """
     id_ = 222222
     product_id = 222222
@@ -369,12 +369,12 @@ async def create_order(
     """Фикстура для создания тестовой корзины в БД.
 
     Args:
-        get_session (AsyncSession): Асинхронная сессия базы данных
-        create_cart: Экземпляр модели Carts
+        get_session (AsyncSession): Асинхронная сессия базы данных.
+        create_cart: Экземпляр модели Carts.
 
     Returns:
-        Orders: Экземпляр модели Orders, представляющий созданную
-        корзину
+        Orders: Экземпляр модели Orders, представляющий созданный
+        заказ.
     """
     id_ = 222222
     user_id = 222222
@@ -416,7 +416,8 @@ async def create_order(
 
 
 @pytest.fixture(scope="function")
-async def ac():
+async def ac() -> AsyncGenerator[AsyncClient, None]:
+    """Отдаёт неаутентифицированного пользователя."""
     async with AsyncClient(
         base_url="http://test", transport=httpx.ASGITransport(app=fastapi_app)
     ) as ac:
@@ -424,7 +425,8 @@ async def ac():
 
 
 @pytest.fixture(scope="function")
-async def authenticated_ac(create_user):
+async def authenticated_ac(create_user) -> AsyncGenerator[AsyncClient, None]:
+    """Отдаёт аутентифицированного пользователя."""
     async with AsyncClient(
         base_url="http://test", transport=httpx.ASGITransport(app=fastapi_app)
     ) as ac:
