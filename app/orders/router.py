@@ -154,7 +154,29 @@ async def get_all_orders(
     return orders
 
 
-@router.delete("/{order_id}")
+@router.get("/{order_id}")
+async def get_order_by_id(
+    session: DbSession, order_id: int, user: Users = Depends(get_current_user)
+) -> SOrders:
+    """
+    Отдаёт заказ по ID.
+
+    Args:
+        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
+        order_id: ID заказа, который должен быть получен.
+        user: Экземпляр модели Users, представляющий текущего пользователя, полученный через зависимость get_current_user().
+
+    Returns:
+        order: Экземпляр модели Orders, представляющий заказ с указанным ID.
+    """
+    order = await OrdersDAO.find_one_or_none(session, id=order_id, user_id=user.id)
+    if not order:
+        raise YouDoNotHaveOrdersException
+
+    return order
+
+
+@router.delete("/delete/{order_id}")
 async def delete_order(
     session: DbSession,
     order_id: int,

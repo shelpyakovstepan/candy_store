@@ -20,7 +20,7 @@ from app.users.models import Users
 router = APIRouter(prefix="/favourites", tags=["Избранное"])
 
 
-@router.post("/{product_id}")
+@router.post("/add/{product_id}")
 async def add_favourite(
     session: DbSession, product_id: int, user: Users = Depends(get_current_user)
 ) -> SFavourite:
@@ -69,6 +69,30 @@ async def get_favourites(
     favourites = await FavouritesDAO.find_all(session, user_id=user.id)
 
     return favourites
+
+
+@router.get("/{favourite_id}")
+async def get_favourite_by_id(
+    session: DbSession, favourite_id: int, user: Users = Depends(get_current_user)
+) -> SFavourite:
+    """
+    Отдаёт позицию в избранном по ID.
+
+    Args:
+        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
+        favourite_id: ID позиции в избранном, которая должна быть получена.
+        user: Экземпляр модели Users, представляющий текущего пользователя, полученный через зависимость get_current_user().
+
+    Returns:
+        favourite: Экземпляр модели Favourites, представляющий позицию в избранном с указанным ID.
+    """
+    favourite = await FavouritesDAO.find_one_or_none(
+        session, id=favourite_id, user_id=user.id
+    )
+    if not favourite:
+        raise YouDoNotHaveFavouriteWithThisIdException
+
+    return favourite
 
 
 @router.delete("/")

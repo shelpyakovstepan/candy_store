@@ -98,6 +98,34 @@ class TestOrdersApi:
             (222222, 200),
         ],
     )
+    async def test_get_order_by_id(
+        self,
+        create_user,
+        create_address,
+        create_product,
+        create_cart,
+        create_carts_item,
+        create_order,
+        authenticated_ac: AsyncClient,
+        order_id,
+        status_code,
+    ):
+        response = await authenticated_ac.get(
+            f"/orders/{order_id}",
+            params={
+                "order_id": order_id,
+            },
+        )
+
+        assert response.status_code == status_code
+
+    @pytest.mark.parametrize(
+        "order_id,status_code",
+        [
+            (333333, 409),
+            (222222, 200),
+        ],
+    )
     async def test_delete_order(
         self,
         create_user,
@@ -111,7 +139,7 @@ class TestOrdersApi:
         status_code,
     ):
         response = await authenticated_ac.delete(
-            f"/orders/{order_id}",
+            f"/orders/delete/{order_id}",
             params={
                 "order_id": order_id,
             },

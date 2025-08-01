@@ -235,7 +235,7 @@ async def change_admin_status(
 @router.post("/images/products")
 async def upload_product_image(name: int, file: UploadFile):
     """
-    Добавляет фото для продукта.
+    Добавляет фото для товара.
 
     Args:
         name: Имя, под которым сохранится фото.

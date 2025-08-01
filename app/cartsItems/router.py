@@ -96,6 +96,31 @@ async def get_all_cart_items(
     return cart_items
 
 
+@router.get("/{cart_item_id}")
+async def get_cart_item_by_id(
+    session: DbSession, cart_item_id: int, cart: Carts = Depends(get_users_cart)
+) -> SCartsItem:
+    """
+    Отдаёт товар из корзины по ID.
+
+    Args:
+        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
+        cart_item_id: ID товара в корзине, который должен быть получен.
+        cart: Экземпляр модели Carts, представляющий текущую корзину пользователя,
+        полученный через зависимость get_users_cart().
+
+    Returns:
+        cart_item: Экземпляр модели CartsItems, представляющий товар в корзине с указанным ID.
+    """
+    cart_item = await CartsItemsDAO.find_one_or_none(
+        session, id=cart_item_id, cart_id=cart.id
+    )
+    if not cart_item:
+        raise NotCartsItemException
+
+    return cart_item
+
+
 @router.patch("/update")
 async def update_carts_items_quantity(
     session: DbSession,

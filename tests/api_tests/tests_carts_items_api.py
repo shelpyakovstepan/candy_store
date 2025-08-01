@@ -68,6 +68,31 @@ class TestCartsItemsApi:
         assert len(response.json()) == 1
 
     @pytest.mark.parametrize(
+        "cart_item_id,status_code",
+        [
+            (333333, 409),
+            ("one", 422),
+            (222222, 200),
+        ],
+    )
+    async def test_get_cart_item_by_id(
+        self,
+        create_user,
+        create_product,
+        create_cart,
+        create_carts_item,
+        cart_item_id,
+        status_code,
+        authenticated_ac: AsyncClient,
+    ):
+        response = await authenticated_ac.get(
+            f"/cartsitems/{cart_item_id}",
+            params={"cart_item_id": cart_item_id},
+        )
+
+        assert response.status_code == status_code
+
+    @pytest.mark.parametrize(
         "cart_item_id,action,quantity,status_code",
         [
             (222222, "something-wrong", 1, 422),
