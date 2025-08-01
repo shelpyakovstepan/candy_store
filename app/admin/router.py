@@ -1,5 +1,8 @@
+# STDLIB
+import shutil
+
 # THIRDPARTY
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile
 
 # FIRSTPARTY
 from app.admin.dependencies import check_admin_status
@@ -227,3 +230,19 @@ async def change_admin_status(
         raise NotUserException
 
     return user  # pyright: ignore [reportReturnType]
+
+
+@router.post("/images/products")
+async def upload_product_image(name: int, file: UploadFile):
+    """
+    Добавляет фото для продукта.
+
+    Args:
+        name: Имя, под которым сохранится фото.
+        file: Файл с фото, которое должно быть сохранено.
+
+    Returns:
+        None
+    """
+    with open(f"app/static/images/{name}.webp", "wb+") as file_object:
+        shutil.copyfileobj(file.file, file_object)
