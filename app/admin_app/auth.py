@@ -11,10 +11,31 @@ from app.users.dependencies import get_current_user
 
 
 async def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """
+    Сравнивает введённый пароль и хешированный пароль.
+
+    Args:
+        plain_password: Введенный пароль.
+        hashed_password: Хешированный пароль для сравнения.
+
+    Returns:
+        True, если пароль правильный, False - если неправильный.
+    """
     return pwd_context.verify(plain_password, hashed_password)
 
 
 async def authenticate_user(user_id: int, password: str):
+    """
+    Аутентифицирует пользователя.
+
+    Args:
+        user_id: ID рользователя, который должен быть аутентифицирован.
+        password: Пароль, по которому проверяется пользователь.
+
+    Returns:
+        auth_user: Экземпляр модели Users, представляющий аутентифицированного пользователя.
+        None, если аутентификация не была успешной.
+    """
     async with SessionLocal() as session:
         auth_user = await UsersDAO.find_by_id(session, user_id)
         if not auth_user:

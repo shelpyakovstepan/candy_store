@@ -4,23 +4,23 @@ import pytest
 
 
 class TestFavouritesApi:
-    @pytest.mark.parametrize("product_id, status", [(222222, 200)])
+    @pytest.mark.parametrize("product_id, status_code", [(222222, 200)])
     async def test_right_add_favourite(
         self,
         create_user,
         create_product,
         authenticated_ac: AsyncClient,
         product_id,
-        status,
+        status_code,
     ):
         response = await authenticated_ac.post(
-            f"/favourites/{product_id}", params={"product_id": product_id}
+            f"/favourites/add/{product_id}", params={"product_id": product_id}
         )
 
-        assert response.status_code == status
+        assert response.status_code == status_code
 
     @pytest.mark.parametrize(
-        "product_id, status", [(222222, 409), (999999, 409), ("one", 422)]
+        "product_id, status_code", [(222222, 409), (999999, 409), ("one", 422)]
     )
     async def test_wrong_add_favourite(
         self,
@@ -29,13 +29,13 @@ class TestFavouritesApi:
         create_favourite,
         authenticated_ac: AsyncClient,
         product_id,
-        status,
+        status_code,
     ):
         response = await authenticated_ac.post(
-            f"/favourites/{product_id}", params={"product_id": product_id}
+            f"/favourites/add/{product_id}", params={"product_id": product_id}
         )
 
-        assert response.status_code == status
+        assert response.status_code == status_code
 
     async def test_get_favourites(
         self,
@@ -49,7 +49,27 @@ class TestFavouritesApi:
         assert response.status_code == 200
         assert response.json() is not None
 
-    @pytest.mark.parametrize("favourite_id, status", [(222222, 200), (999999, 409)])
+    @pytest.mark.parametrize(
+        "favourite_id, status_code", [(222222, 200), (999999, 409)]
+    )
+    async def test_get_favourite_by_id(
+        self,
+        create_user,
+        create_product,
+        create_favourite,
+        authenticated_ac: AsyncClient,
+        favourite_id,
+        status_code,
+    ):
+        response = await authenticated_ac.get(
+            f"/favourites/{favourite_id}", params={"favourite_id": favourite_id}
+        )
+
+        assert response.status_code == status_code
+
+    @pytest.mark.parametrize(
+        "favourite_id, status_code", [(222222, 200), (999999, 409)]
+    )
     async def test_delete_favourite(
         self,
         create_user,
@@ -57,10 +77,10 @@ class TestFavouritesApi:
         create_favourite,
         authenticated_ac: AsyncClient,
         favourite_id,
-        status,
+        status_code,
     ):
         response = await authenticated_ac.delete(
             "/favourites/", params={"favourite_id": favourite_id}
         )
 
-        assert response.status_code == status
+        assert response.status_code == status_code

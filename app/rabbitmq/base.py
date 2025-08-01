@@ -10,6 +10,7 @@ conn_url = get_rabbitmq_url()
 
 
 def rabbitmq_connection():
+    """Проверяет подключение к RabbitMQ."""
     try:
         with Connection(conn_url) as conn:
             conn.connect()
@@ -22,10 +23,19 @@ def rabbitmq_connection():
 
 if rabbitmq_connection():
     broker = RabbitBroker(conn_url)
-    logger.info("Successfully connected to FastStream RabbitMQ")
 else:
     raise ConnectionError("RabbitMQ connection failed")
 
 
 async def send_message(message, queue):
+    """
+    Отправляет сообщение в RabbitMQ.
+
+    Args:
+        message: Сообщение, которое должно быть отправлено в RabbitMQ.
+        queue: Очередь, в которую должно быть отправлено сообщение.
+
+    Returns:
+        None
+    """
     await broker.publish(message, queue)
