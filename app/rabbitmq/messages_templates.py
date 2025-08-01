@@ -2,12 +2,7 @@
 from app.addresses.dao import AddressesDAO
 from app.cartsItems.dao import CartsItemsDAO
 from app.database import DbSession
-from app.orders.models import (
-    Orders,
-    PaymentMethodEnum,
-    ReceivingMethodEnum,
-    StatusEnum,
-)
+from app.orders.models import Orders, PaymentMethodEnum, ReceivingMethodEnum
 from app.products.dao import ProductsDAO
 
 
@@ -34,15 +29,15 @@ async def convert_payment_to_users_view(payment):
 
 async def convert_status_to_users_view(status):
     """Конвертирует статус заказа в пользовательский вид."""
-    if status == StatusEnum.WAITING:
+    if status == "WAITING":
         return "Ожидает оплаты"
-    if status == StatusEnum.PREPARING:
+    if status == "PREPARING":
         return "Готовится"
-    if status == StatusEnum.READY:
+    if status == "READY":
         return "Готов"
-    if status == StatusEnum.DELIVERY:
+    if status == "DELIVERY":
         return "Доставляется"
-    if status == StatusEnum.COMPLETED:
+    if status == "COMPLETED":
         return "Выполнен"
 
 
@@ -62,31 +57,28 @@ async def create_orders_cart_items_text(session, cart_id):
 
 async def create_text_by_order_status(order):
     """Создаёт информацию о статусе заказа для пользователя."""
-    if order.status == StatusEnum.WAITING:
+    if order.status == "WAITING":
         return (
             "Пожалуйста, оплатите заказ на сайте, чтобы мы начали его готовить!\n"
             "Мы будем уведомлять вас об статусе заказа!"
         )
-    if order.status == StatusEnum.PREPARING:
+    if order.status == "PREPARING":
         return "Ваш заказ готовится!\nКогда он будет готов, мы уведомим вас!"
     if (
-        order.status == StatusEnum.READY
+        order.status == "READY"
         and order.receiving_method == ReceivingMethodEnum.DELIVERY
     ):
         return (
             "Ваш заказ готов!\nОжидайте доставку по указанному адресу, дате и времени!"
         )
-    if (
-        order.status == StatusEnum.READY
-        and order.receiving_method == ReceivingMethodEnum.PICKUP
-    ):
+    if order.status == "READY" and order.receiving_method == ReceivingMethodEnum.PICKUP:
         return (
             "Ваш заказ готов!\n"
             "Заберите заказ по адресу самовывоза в указанную дату и время!"
         )
-    if order.status == StatusEnum.DELIVERY:
+    if order.status == "DELIVERY":
         return "Ваш заказ передан в доставку!"
-    if order.status == StatusEnum.COMPLETED:
+    if order.status == "COMPLETED":
         return "\n"
 
 

@@ -28,7 +28,11 @@ from app.orders.dao import OrdersDAO
 from app.orders.models import StatusEnum
 from app.orders.schemas import SCreateOrder, SOrders
 from app.rabbitmq.base import send_message
-from app.rabbitmq.messages_templates import admin_orders_text, user_orders_text
+from app.rabbitmq.messages_templates import (
+    admin_orders_text,
+    update_user_orders_text,
+    user_orders_text,
+)
 from app.users.dependencies import get_current_user
 from app.users.models import Users
 
@@ -108,18 +112,20 @@ async def create_order(
 async def pay_for_the_order(
     session: DbSession,
     order_id: int,
+    user: Users = Depends(get_current_user),
 ) -> SOrders:
     """
-    Оплачивает заказ и меняет его статус.
+    Оплачивает заказ и меняет его статус (здесь НЕТУ логики оплаты).
 
     Args:
         session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
         order_id: ID заказа, который должен быть оплачен.
+        user: Экземпляр модели Users, представляющий текущего пользователя, полученный через зависимость get_current_user().
 
     Returns:
         pay_order: Экземпляр модели Orders, представляющий оплаченный заказ.
     """
-    pay_order = await OrdersDAO.find_by_id(session, order_id)
+    pay_order = await OrdersDAO.find_one_or_none(session, id=order_id, user_id=user.id)
     if not pay_order:
         raise YouDoNotHaveOrdersException
 
@@ -128,6 +134,13 @@ async def pay_for_the_order(
 
     pay_order = await OrdersDAO.update(session, order_id, status="PREPARING")
     await send_message(await admin_orders_text(session, order=pay_order), "admin-queue")  # pyright: ignore [reportArgumentType]
+    await send_message(
+        {
+            "chat_id": user.user_chat_id,  # pyright: ignore [reportOptionalMemberAccess]
+            "text": await update_user_orders_text(order=pay_order),  # pyright: ignore [reportArgumentType]
+        },
+        "messages-queue",
+    )
 
     return pay_order
 
