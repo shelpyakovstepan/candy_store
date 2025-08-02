@@ -7,61 +7,51 @@ from app.products.dao import ProductsDAO, ProductsFilter
 
 
 class TestProductsDAO:
-    # @pytest.mark.parametrize(
-    #    "name, category, ingredients, unit, price, min_quantity, max_quantity, description, image_id",
-    #    [
-    #        (
-    #                "Торт",
-    #                "Торты",
-    #                ["Шоколад"],
-    #                "KILOGRAMS",
-    #                2500,
-    #                2,
-    #                6,
-    #                "description",
-    #                1,
-    #        )
-    #    ],
-    # )
-    # async def test_products_add(
-    #        self,
-    #        get_session: AsyncSession,
-    #        create_user,
-    #        name,
-    #        category,
-    #        ingredients,
-    #        unit,
-    #        price,
-    #        min_quantity,
-    #        max_quantity,
-    #        description,
-    #        image_id,
-    # ):
-    #    added_product = await ProductsDAO.add(
-    #        session=get_session,
-    #        name=name,
-    #        category=category,
-    #        ingredients=ingredients,
-    #        unit=unit,
-    #        price=price,
-    #        min_quantity=min_quantity,
-    #        max_quantity=max_quantity,
-    #        description=description,
-    #        image_id=image_id,
-    #    )
-    #
-    #    assert added_product is not None
-    #    assert added_product.name == name
-    #    assert added_product.category == category
-    #    assert added_product.ingredients == ingredients
-    #    assert added_product.price == price
-    #    assert added_product.min_quantity == min_quantity
-    #    assert added_product.max_quantity == max_quantity
-    #    assert added_product.description == description
-    #    assert added_product.image_id == image_id
-    #
-    #
-    #
+    @pytest.mark.parametrize(
+        "name, category, ingredients, unit, price, min_quantity, max_quantity, description, image_id",
+        [
+            (
+                "Торт",
+                "Торты",
+                ["Шоколад"],
+                "KILOGRAMS",
+                2500,
+                2,
+                6,
+                "description",
+                1,
+            )
+        ],
+    )
+    async def test_add_product(
+        self,
+        get_session: AsyncSession,
+        name,
+        category,
+        ingredients,
+        unit,
+        price,
+        min_quantity,
+        max_quantity,
+        description,
+        image_id,
+    ):
+        product = await ProductsDAO.add(
+            get_session,
+            name=name,
+            category=category,
+            ingredients=ingredients,
+            unit=unit,
+            price=price,
+            min_quantity=min_quantity,
+            max_quantity=max_quantity,
+            description=description,
+            image_id=image_id,
+        )
+
+        assert product is not None
+        assert product.name == name
+
     @pytest.mark.parametrize(
         "name, category, exists",
         [("Not_exists_name", "Торты", False), ("Торт обычный", "Торты", True)],

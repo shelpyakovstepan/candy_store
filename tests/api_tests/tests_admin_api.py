@@ -61,6 +61,7 @@ class TestAdminApi:
                 "description": description,
                 "image_id": image_id,
             },
+            json=ingredients,
         )
 
         assert response.status_code == status_code
