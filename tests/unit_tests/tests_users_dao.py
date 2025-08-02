@@ -8,6 +8,23 @@ from app.users.dao import UsersDAO
 
 class TestUsersDAO:
     @pytest.mark.parametrize(
+        "user_chat_id",
+        [
+            (1111),
+            (2222),
+        ],
+    )
+    async def test_users_add(
+        self,
+        get_session: AsyncSession,
+        user_chat_id: int,
+    ):
+        user = await UsersDAO.add(get_session, user_chat_id=user_chat_id)
+
+        assert user is not None
+        assert user.user_chat_id == user_chat_id
+
+    @pytest.mark.parametrize(
         "user_id, exists",
         [
             (222222, True),
