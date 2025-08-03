@@ -24,6 +24,7 @@ from app.admin_app.views import (
     FavouritesAdmin,
     OrdersAdmin,
     ProductsAdmin,
+    PurchasesAdmin,
     UsersAdmin,
 )
 from app.carts.router import router as carts_router
@@ -34,6 +35,7 @@ from app.favourites.router import router as favourites_router
 from app.logger import logger
 from app.orders.router import router as orders_router
 from app.products.router import router as products_router
+from app.purchases.router import router as purchases_router
 from app.rabbitmq.base import broker
 from app.users.router import router as users_router
 
@@ -74,6 +76,7 @@ admin.add_view(FavouritesAdmin)
 admin.add_view(CartsAdmin)
 admin.add_view(CartsItemsAdmin)
 admin.add_view(OrdersAdmin)
+admin.add_view(PurchasesAdmin)
 app.include_router(users_router)
 app.include_router(admins_router)
 app.include_router(addresses_router)
@@ -85,6 +88,7 @@ app.include_router(carts_router)
 app.include_router(carts_items_router)
 
 app.include_router(orders_router)
+app.include_router(purchases_router)
 
 templates = Jinja2Templates("app/templates")
 

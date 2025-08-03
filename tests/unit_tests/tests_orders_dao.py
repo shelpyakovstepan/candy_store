@@ -69,6 +69,24 @@ class TestOrdersDAO:
         else:
             assert not orders
 
+    @pytest.mark.parametrize("order_id, exists", [(333333, False), (222222, True)])
+    async def test_orders_find_by_id(
+        self,
+        get_session: AsyncSession,
+        create_address,
+        create_product,
+        create_carts_item,
+        create_order,
+        order_id,
+        exists,
+    ):
+        order = await OrdersDAO.find_by_id(session=get_session, model_id=order_id)
+
+        if exists:
+            assert order is not None
+        else:
+            assert not order
+
     @pytest.mark.parametrize(
         "user_id, cart_id, status, exists",
         [

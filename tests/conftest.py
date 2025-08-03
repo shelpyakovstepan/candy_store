@@ -28,6 +28,7 @@ from app.orders.models import (
     StatusEnum,
 )
 from app.products.models import Products, UnitEnum
+from app.purchases.models import Purchases
 from app.users.auth import create_access_token
 from app.users.models import Users
 
@@ -109,6 +110,9 @@ async def create_user(
     await get_session.commit()
 
     yield user
+
+    delete_purchases_query = delete(Purchases).where(Purchases.user_id == id_)
+    await get_session.execute(delete_purchases_query)
 
     delete_orders_query = delete(Orders).where(and_(Orders.user_id == id_))
     await get_session.execute(delete_orders_query)
@@ -408,6 +412,9 @@ async def create_order(
     await get_session.commit()
 
     yield order
+
+    delete_purchases_query = delete(Purchases).where(Purchases.order_id == id_)
+    await get_session.execute(delete_purchases_query)
 
     delete_orders_query = delete(Orders).where(and_(Orders.id == id_))
     await get_session.execute(delete_orders_query)

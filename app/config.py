@@ -34,6 +34,10 @@ class Settings(BaseSettings):
 
     PASSWORD: str
 
+    MRH_PASS_1: str
+    MRH_PASS_2: str
+    MRH_LOGIN: str
+
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
     )
