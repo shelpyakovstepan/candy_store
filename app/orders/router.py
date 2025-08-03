@@ -17,7 +17,6 @@ from app.database import DbSession
 from app.exceptions import (
     NotTrueTimeException,
     YouCanNotAddNewOrderException,
-    YouCanNotChooseThisPaymentException,
     YouCanNotOrderByThisId,
     YouCanNotPayOrderException,
     YouDoNotHaveCartItemsException,
@@ -71,9 +70,6 @@ async def create_order(
 
     if cart.total_price == 0:
         raise YouDoNotHaveCartItemsException
-
-    if order_data.receiving_method == "DELIVERY" and order_data.payment == "CASH":
-        raise YouCanNotChooseThisPaymentException
 
     check_order = await OrdersDAO.find_one_or_none(
         session, user_id=user.id, cart_id=cart.id, status="WAITING"

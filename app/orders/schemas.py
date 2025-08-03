@@ -56,5 +56,5 @@ class SCreateOrder(BaseModel):
     date_receiving: date
     time_receiving: time
     receiving_method: Literal["PICKUP", "DELIVERY"]
-    payment: Literal["CASH", "NONCASH"]
+    payment: Literal["NONCASH"]
     comment: Optional[str] = Query("", max_length=100)

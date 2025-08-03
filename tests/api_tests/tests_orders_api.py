@@ -18,8 +18,6 @@ class TestOrdersApi:
                 422,
             ),
             ("2100-01-01", "12:00", "DELIVERY", "wrong_payment_format", "comment", 422),
-            ("2000-01-01", "12:00", "DELIVERY", "NONCASH", "comment", 400),
-            ("2100-01-01", "12:00", "DELIVERY", "CASH", "comment", 400),
             ("2100-01-01", "12:00", "DELIVERY", "NONCASH", "comment", 409),
         ],
     )

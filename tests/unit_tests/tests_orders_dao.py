@@ -12,7 +12,7 @@ from app.orders.dao import OrdersDAO, OrdersStatusFilter
 class TestOrdersDAO:
     @pytest.mark.parametrize(
         "cart_id, date_receiving, time_receiving, receiving_method, payment, comment",
-        [(222222, "2100-01-01", "12:00", "PICKUP", "CASH", "comment")],
+        [(222222, "2100-01-01", "12:00", "PICKUP", "NONCASH", "comment")],
     )
     async def test_orders_add(
         self,
