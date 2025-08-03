@@ -8,6 +8,7 @@ from app.cartsItems.models import CartsItems
 from app.favourites.models import Favourites
 from app.orders.models import Orders
 from app.products.models import Products
+from app.purchases.models import Purchases
 from app.users.models import Users
 
 
@@ -56,6 +57,7 @@ class OrdersAdmin(ModelView, model=Orders):
         Orders.user,
         Orders.address_,
         Orders.cart,
+        Orders.purchases,
     ]
     name = "Заказ"
     name_plural = "Заказы"
@@ -68,3 +70,12 @@ class FavouritesAdmin(ModelView, model=Favourites):
     ]
     name = "Товар в избранном"
     name_plural = "Избранное"
+
+
+class PurchasesAdmin(ModelView, model=Purchases):
+    column_list = [c.name for c in Purchases.__table__.c] + [
+        Purchases.user,
+        Purchases.order,
+    ]
+    name = "Покупка"
+    name_plural = "Покупки"

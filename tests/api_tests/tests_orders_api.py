@@ -73,7 +73,7 @@ class TestOrdersApi:
             (999999, 409),
         ],
     )
-    async def test_pay_for_the_order(
+    async def test_get_payment_link_for_the_order(
         self,
         create_user,
         create_address,
@@ -85,7 +85,7 @@ class TestOrdersApi:
         order_id,
         status_code,
     ):
-        response = await authenticated_ac.patch(
+        response = await authenticated_ac.get(
             "/orders/pay", params={"order_id": order_id}
         )
 

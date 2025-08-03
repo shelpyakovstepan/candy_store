@@ -75,6 +75,10 @@ services:
       BOT_TOKEN: "${BOT_TOKEN}"
 
       PASSWORD: "${PASSWORD}"
+
+      MRH_PASS_1: "${MRH_PASS_1}"
+      MRH_PASS_2: "${MRH_PASS_2}"
+      MRH_LOGIN: "${MRH_LOGIN}"
     restart: always
     depends_on:
       db:

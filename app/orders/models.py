@@ -56,6 +56,7 @@ class Orders(Base):
     user = relationship("Users", back_populates="order")
     address_ = relationship("Addresses", back_populates="order")
     cart = relationship("Carts", back_populates="order")
+    purchases = relationship("Purchases", back_populates="order")
 
     def __str__(self):
         return f"{self.id}"
