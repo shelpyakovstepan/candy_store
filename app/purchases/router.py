@@ -99,4 +99,5 @@ async def robokassa_result(session: DbSession, request: Request) -> PlainTextRes
     logger.info(f"Ответ: {result}")
     return PlainTextResponse(result)
 
+
 # pyright: reportArgumentType=false
