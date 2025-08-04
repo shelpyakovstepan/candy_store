@@ -12,6 +12,13 @@ class SUsers(BaseModel):
     is_admin: int
 
 
+class SUsersWithPhoneNumber(BaseModel):
+    id: int
+    user_chat_id: int
+    is_admin: int
+    phone_number: str
+
+
 class SChangeAdminStatus(BaseModel):
     user_id: int
     admin_status: bool
