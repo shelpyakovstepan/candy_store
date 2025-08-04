@@ -5,20 +5,18 @@ import pytest
 
 class TestOrdersApi:
     @pytest.mark.parametrize(
-        "date_receiving,time_receiving,receiving_method,payment,comment,status_code",
+        "date_receiving,time_receiving,receiving_method,comment,status_code",
         [
-            ("wrong_date_format", "12:00", "DELIVERY", "NONCASH", "comment", 422),
-            ("2100-12-01", "wrong_time_format", "DELIVERY", "NONCASH", "comment", 422),
+            ("wrong_date_format", "12:00", "DELIVERY", "comment", 422),
+            ("2100-12-01", "wrong_time_format", "DELIVERY", "comment", 422),
             (
                 "2100-12-01",
                 "12:00",
                 "wrong_receiving_method_format",
-                "NONCASH",
                 "comment",
                 422,
             ),
-            ("2100-01-01", "12:00", "DELIVERY", "wrong_payment_format", "comment", 422),
-            ("2100-01-01", "12:00", "DELIVERY", "NONCASH", "comment", 409),
+            ("2100-01-01", "12:00", "DELIVERY", "comment", 409),
         ],
     )
     async def test_wrong_create_order(
@@ -33,7 +31,6 @@ class TestOrdersApi:
         date_receiving,
         time_receiving,
         receiving_method,
-        payment,
         comment,
         status_code,
     ):
@@ -43,7 +40,6 @@ class TestOrdersApi:
                 "date_receiving": date_receiving,
                 "time_receiving": time_receiving,
                 "receiving_method": receiving_method,
-                "payment": payment,
                 "comment": comment,
             },
         )

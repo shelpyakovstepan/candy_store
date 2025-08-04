@@ -137,3 +137,8 @@ class FavouriteAlreadyExistsException(BaseAppException):
 class YouDoNotHaveFavouriteWithThisIdException(BaseAppException):
     status_code = status.HTTP_409_CONFLICT
     detail = "You don't have favourite with this id"
+
+
+class YouDoNotHavePhoneNumberException(BaseAppException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = "You don't have phone number for delivery"

@@ -61,5 +61,25 @@ class TestUsersDAO:
         else:
             assert not user
 
+    @pytest.mark.parametrize(
+        "user_id, phone_number, exists",
+        [
+            (222222, "+79012345678", True),
+            (1000000, "+79012345678", False),
+        ],
+    )
+    async def test_users_update(
+        self, get_session: AsyncSession, create_user, user_id, phone_number, exists
+    ):
+        user = await UsersDAO.update(
+            get_session, model_id=user_id, phone_number=phone_number
+        )
+
+        if exists:
+            assert user.id == user_id
+            assert user.phone_number == phone_number
+        else:
+            assert not user
+
 
 # pyright: reportOptionalMemberAccess=false

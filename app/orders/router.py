@@ -21,6 +21,7 @@ from app.exceptions import (
     YouCanNotPayOrderException,
     YouDoNotHaveCartItemsException,
     YouDoNotHaveOrdersException,
+    YouDoNotHavePhoneNumberException,
 )
 from app.logger import logger
 from app.orders.dao import OrdersDAO
@@ -71,8 +72,11 @@ async def create_order(
     if cart.total_price == 0:
         raise YouDoNotHaveCartItemsException
 
+    if order_data.receiving_method == "DELIVERY" and user.phone_number is None:
+        raise YouDoNotHavePhoneNumberException
+
     check_order = await OrdersDAO.find_one_or_none(
-        session, user_id=user.id, cart_id=cart.id, status="WAITING"
+        session, user_id=user.id, status="WAITING"
     )
     if check_order:
         raise YouCanNotAddNewOrderException
@@ -85,7 +89,6 @@ async def create_order(
         date_receiving=order_data.date_receiving,
         time_receiving=order_data.time_receiving,
         receiving_method=order_data.receiving_method,
-        payment=order_data.payment,
         comment=order_data.comment,  # pyright: ignore [reportArgumentType]
     )
 
