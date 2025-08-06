@@ -6,6 +6,18 @@ from app.orders.models import Orders, PaymentMethodEnum, ReceivingMethodEnum
 from app.products.dao import ProductsDAO
 
 
+async def text_for_new_user():
+    """Содержит текст приветственного соообщения, отправляемого пользователю при регистрации."""
+    return "Спасибо, что зарегистрировались на нашем сайте!\n\nУдачных заказов!"
+
+
+async def text_failed_add_phone_number_for_user():
+    return (
+        "Не удалось добавить номер телефона, так как Вы не зарегистрированы на сайте.\n"
+        "Пожалуйста, зарегистрируйтесь, прежде чем отправлять номер!"
+    )
+
+
 async def convert_time_receiving_to_users_view(time_receiving):
     """Конвертирует время в пользовательский вид."""
     return str(time_receiving)[:5]

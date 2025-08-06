@@ -1,5 +1,5 @@
 # THIRDPARTY
-from faststream.rabbit import RabbitBroker
+from faststream.rabbit import RabbitBroker, RabbitQueue
 from kombu import Connection
 
 # FIRSTPARTY
@@ -39,3 +39,8 @@ async def send_message(message, queue):
         None
     """
     await broker.publish(message, queue)
+
+
+messages_queue = RabbitQueue(name="messages-queue")
+admin_queue = RabbitQueue(name="admin-queue")
+phone_number_queue = RabbitQueue(name="phone-number-queue")

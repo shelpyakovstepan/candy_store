@@ -26,7 +26,6 @@ class OrdersDAO(BaseDao):
         date_receiving: date,
         time_receiving: time,
         receiving_method: str,
-        payment: str,
         comment: str,
     ):
         total_price = (
@@ -44,7 +43,7 @@ class OrdersDAO(BaseDao):
                 date_receiving=date_receiving,
                 time_receiving=time_receiving,
                 receiving_method=receiving_method,
-                payment=payment,
+                payment="NONCASH",
                 total_price=total_price,
                 comment=comment,
                 status="WAITING",

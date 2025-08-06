@@ -11,6 +11,8 @@ from fastapi.responses import PlainTextResponse, RedirectResponse
 from app.config import get_bot_token_hash
 from app.database import DbSession
 from app.logger import logger
+from app.rabbitmq.broker import messages_queue, send_message
+from app.rabbitmq.messages_templates import text_for_new_user
 from app.users.auth import create_access_token
 from app.users.dao import UsersDAO
 from app.users.dependencies import get_current_user
@@ -49,6 +51,10 @@ async def telegram_callback(
         new_user = await UsersDAO.add(
             session,
             user_chat_id=user_id,
+        )
+        await send_message(
+            message={"chat_id": user_id, "text": await text_for_new_user()},
+            queue=messages_queue,
         )
         logger.info("User successfully registered")
 

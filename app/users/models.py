@@ -11,6 +11,7 @@ class Users(Base):
 
     user_chat_id: Mapped[int] = mapped_column(BIGINT, nullable=False, unique=True)
     is_admin: Mapped[bool] = mapped_column(nullable=False, default=False)
+    phone_number: Mapped[str] = mapped_column(unique=True, nullable=True)
 
     address = relationship("Addresses", back_populates="user")
     cart = relationship("Carts", back_populates="user")

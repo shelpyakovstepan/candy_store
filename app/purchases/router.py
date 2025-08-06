@@ -12,7 +12,7 @@ from app.orders.dao import OrdersDAO
 from app.orders.models import StatusEnum
 from app.purchases.dao import PurchasesDAO
 from app.purchases.utils import check_signature_result
-from app.rabbitmq.base import send_message
+from app.rabbitmq.broker import admin_queue, messages_queue, send_message
 from app.rabbitmq.messages_templates import (
     admin_orders_text,
     update_user_orders_text,
@@ -82,14 +82,14 @@ async def robokassa_result(session: DbSession, request: Request) -> PlainTextRes
         user = await UsersDAO.find_by_id(session, payment_data["user_id"])
 
         await send_message(
-            await admin_orders_text(session, order=pay_order), "admin-queue"
+            message=admin_orders_text(session, order=pay_order), queue=admin_queue
         )  # pyright: ignore [reportArgumentType]
         await send_message(
-            {
+            message={
                 "chat_id": user.user_chat_id,  # pyright: ignore [reportOptionalMemberAccess]
                 "text": await update_user_orders_text(order=pay_order),  # pyright: ignore [reportArgumentType]
             },
-            "messages-queue",
+            queue=messages_queue,
         )
 
     else:

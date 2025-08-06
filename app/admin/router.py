@@ -26,7 +26,7 @@ from app.products.schemas import (
     SProducts,
     SUpdateProduct,
 )
-from app.rabbitmq.base import send_message
+from app.rabbitmq.broker import messages_queue, send_message
 from app.rabbitmq.messages_templates import update_user_orders_text
 from app.users.dao import UsersDAO
 from app.users.schemas import SChangeAdminStatus, SUsers
@@ -198,11 +198,11 @@ async def change_order_status(
         status=change_order_status_data.status,
     )
     await send_message(
-        {
+        message={
             "chat_id": user.user_chat_id,  # pyright: ignore [reportOptionalMemberAccess]
             "text": await update_user_orders_text(order=updated_order),  # pyright: ignore [reportArgumentType]
         },
-        "messages-queue",
+        queue=messages_queue,
     )
     return order
 

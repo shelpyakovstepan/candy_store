@@ -173,6 +173,12 @@ class TestProductsDAO:
 
         assert products is not None
 
+    async def test_find_all_product_categories(
+        self, get_session: AsyncSession, create_user, create_product, get_redis
+    ):
+        categories = await ProductsDAO.find_all_product_categories(session=get_session)
+        assert categories is not None
+
     async def test_products_delete(
         self, get_session: AsyncSession, create_user, create_product
     ):

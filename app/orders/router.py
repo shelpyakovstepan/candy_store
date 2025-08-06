@@ -17,11 +17,11 @@ from app.database import DbSession
 from app.exceptions import (
     NotTrueTimeException,
     YouCanNotAddNewOrderException,
-    YouCanNotChooseThisPaymentException,
     YouCanNotOrderByThisId,
     YouCanNotPayOrderException,
     YouDoNotHaveCartItemsException,
     YouDoNotHaveOrdersException,
+    YouDoNotHavePhoneNumberException,
 )
 from app.logger import logger
 from app.orders.dao import OrdersDAO
@@ -29,7 +29,7 @@ from app.orders.models import StatusEnum
 from app.orders.schemas import SCreateOrder, SOrders
 from app.purchases.dao import PurchasesDAO
 from app.purchases.utils import generate_payment_link
-from app.rabbitmq.base import send_message
+from app.rabbitmq.broker import messages_queue, send_message
 from app.rabbitmq.messages_templates import user_orders_text
 from app.users.dependencies import get_current_user
 from app.users.models import Users
@@ -72,11 +72,11 @@ async def create_order(
     if cart.total_price == 0:
         raise YouDoNotHaveCartItemsException
 
-    if order_data.receiving_method == "DELIVERY" and order_data.payment == "CASH":
-        raise YouCanNotChooseThisPaymentException
+    if order_data.receiving_method == "DELIVERY" and user.phone_number is None:
+        raise YouDoNotHavePhoneNumberException
 
     check_order = await OrdersDAO.find_one_or_none(
-        session, user_id=user.id, cart_id=cart.id, status="WAITING"
+        session, user_id=user.id, status="WAITING"
     )
     if check_order:
         raise YouCanNotAddNewOrderException
@@ -89,18 +89,17 @@ async def create_order(
         date_receiving=order_data.date_receiving,
         time_receiving=order_data.time_receiving,
         receiving_method=order_data.receiving_method,
-        payment=order_data.payment,
         comment=order_data.comment,  # pyright: ignore [reportArgumentType]
     )
 
     await AddressesDAO.update(session, address.id, status=False)
     await CartsDAO.update(session, cart.id, status="INACTIVE")
     await send_message(
-        {
+        message={
             "chat_id": user.user_chat_id,
             "text": await user_orders_text(session, order=new_order),  # pyright: ignore [reportArgumentType]
         },
-        "messages-queue",
+        queue=messages_queue,
     )
     logger.info("Сообщение о заказе отправлено пользователю в телеграм")
     return new_order
