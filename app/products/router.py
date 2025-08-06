@@ -9,7 +9,7 @@ from fastapi_cache.decorator import cache
 from app.database import DbSession
 from app.exceptions import NotProductsException
 from app.products.dao import ProductsDAO
-from app.products.schemas import SGetProducts, SProducts
+from app.products.schemas import SGetProducts, SProducts, SProductsCategories
 
 router = APIRouter(
     prefix="/products",
@@ -63,3 +63,20 @@ async def get_product_by_id(session: DbSession, product_id: int) -> SProducts:
     if not product:
         raise NotProductsException
     return product
+
+
+@router.get("//categories")
+@cache(expire=30)
+async def get_all_categories(session: DbSession) -> List[SProductsCategories]:
+    """
+    Отдаёт все категории товаров.
+
+    Args:
+        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
+
+    Returns:
+        categories: Список всех категорий товаров.
+    """
+    categories = await ProductsDAO.find_all_product_categories(session)
+
+    return categories

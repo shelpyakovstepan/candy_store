@@ -35,3 +35,15 @@ class TestProductsApi:
         )
 
         assert response.status_code == status_code
+
+    async def test_get_all_categories(
+        self,
+        get_redis,
+        create_user,
+        create_product,
+        authenticated_ac: AsyncClient,
+    ):
+        response = await authenticated_ac.get("/products//categories")
+
+        assert response.status_code == 200
+        assert response.json() is not None

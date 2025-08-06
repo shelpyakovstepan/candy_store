@@ -74,3 +74,7 @@ class SGetProducts(BaseModel):
     page: int = Query(1, ge=1)
     page_size: int = Query(5, le=10, ge=5)
     products_filter: ProductsFilter = FilterDepends(ProductsFilter)
+
+
+class SProductsCategories(BaseModel):
+    category: str
