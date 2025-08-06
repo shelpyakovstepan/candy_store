@@ -29,7 +29,7 @@ from app.orders.models import StatusEnum
 from app.orders.schemas import SCreateOrder, SOrders
 from app.purchases.dao import PurchasesDAO
 from app.purchases.utils import generate_payment_link
-from app.rabbitmq.broker import send_message
+from app.rabbitmq.broker import messages_queue, send_message
 from app.rabbitmq.messages_templates import user_orders_text
 from app.users.dependencies import get_current_user
 from app.users.models import Users
@@ -95,11 +95,11 @@ async def create_order(
     await AddressesDAO.update(session, address.id, status=False)
     await CartsDAO.update(session, cart.id, status="INACTIVE")
     await send_message(
-        {
+        message={
             "chat_id": user.user_chat_id,
             "text": await user_orders_text(session, order=new_order),  # pyright: ignore [reportArgumentType]
         },
-        "messages-queue",
+        queue=messages_queue,
     )
     logger.info("Сообщение о заказе отправлено пользователю в телеграм")
     return new_order

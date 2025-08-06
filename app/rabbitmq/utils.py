@@ -8,7 +8,7 @@ from app.logger import logger
 from app.orders.models import Orders  # noqa
 from app.products.models import Products  # noqa
 from app.purchases.models import Purchases  # noqa
-from app.rabbitmq.broker import send_message
+from app.rabbitmq.broker import messages_queue, send_message
 from app.users.dao import UsersDAO
 from app.users.models import Users  # noqa
 
@@ -31,12 +31,12 @@ async def add_phone_number(message):
         )
         if not user:
             await send_message(
-                {
+                message={
                     "chat_id": message["chat_id"],
                     "text": "Не удалось добавить номер телефона, так как Вы не зарегистрированы на сайте.\n"
                     "Пожалуйста, зарегистрируйтесь, прежде чем отправлять номер!",
                 },
-                "messages-queue",
+                queue=messages_queue,
             )
         else:
             try:
@@ -50,11 +50,11 @@ async def add_phone_number(message):
                 logger.error(e, exc_info=True)
                 await session.rollback()
                 await send_message(
-                    {
+                    message={
                         "chat_id": user.user_chat_id,
                         "text": "Не удалось добавить номер телефона",
                     },
-                    "messages-queue",
+                    queue=messages_queue,
                 )
 
         logger.info("Номер телефона обработан")
