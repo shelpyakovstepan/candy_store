@@ -9,6 +9,9 @@ from app.orders.models import Orders  # noqa
 from app.products.models import Products  # noqa
 from app.purchases.models import Purchases  # noqa
 from app.rabbitmq.broker import messages_queue, send_message
+from app.rabbitmq.messages_templates import (
+    text_failed_add_phone_number_for_user,
+)
 from app.users.dao import UsersDAO
 from app.users.models import Users  # noqa
 
@@ -33,8 +36,7 @@ async def add_phone_number(message):
             await send_message(
                 message={
                     "chat_id": message["chat_id"],
-                    "text": "Не удалось добавить номер телефона, так как Вы не зарегистрированы на сайте.\n"
-                    "Пожалуйста, зарегистрируйтесь, прежде чем отправлять номер!",
+                    "text": await text_failed_add_phone_number_for_user(),
                 },
                 queue=messages_queue,
             )
