@@ -72,7 +72,11 @@ class ProductsDAO(BaseDao):
 
     @classmethod
     async def find_all_product_categories(cls, session: AsyncSession):
-        all_product_categories_query = select(Products.category).select_from(Products)
+        all_product_categories_query = (
+            select(Products.category)
+            .select_from(Products)
+            .where(Products.status == "ACTIVE")
+        )
         all_product_categories = await session.execute(all_product_categories_query)
 
         return list(set(all_product_categories.scalars().all()))

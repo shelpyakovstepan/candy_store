@@ -9,18 +9,6 @@ class TestAdminApi:
         [
             (
                 "name",
-                "wrong_category",
-                ["ingredient"],
-                "PIECES",
-                2500,
-                2,
-                6,
-                "description",
-                1,
-                422,
-            ),
-            (
-                "name",
                 "Торты",
                 ["ingredient"],
                 "wrong_unit",
@@ -69,18 +57,6 @@ class TestAdminApi:
     @pytest.mark.parametrize(
         "product_id,name,category,unit,price,min_quantity,max_quantity,description,image_id,status_code",
         [
-            (
-                222222,
-                "name",
-                "wrong_category",
-                "PIECES",
-                2500,
-                2,
-                6,
-                "description",
-                1,
-                422,
-            ),
             (222222, "name", "Торты", "wrong_unit", 2500, 2, 6, "description", 1, 422),
             (333333, "name", "Торты", "KILOGRAMS", 2500, 2, 6, "description", 1, 409),
         ],

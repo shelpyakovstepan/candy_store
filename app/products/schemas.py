@@ -31,7 +31,7 @@ class SProducts(BaseModel):
 class SUpdateProduct(BaseModel):
     id: int
     name: Optional[str] = None
-    category: Optional[Literal["Торты", "Пряники"]] = None
+    category: Optional[str] = None
     ingredients: Optional[List[str]] = []
     unit: Optional[Literal["PIECES", "KILOGRAMS"]] = None
     price: Optional[int] = None
@@ -46,7 +46,7 @@ class SUpdateProduct(BaseModel):
 
 class SAddProduct(BaseModel):
     name: str
-    category: Literal["Торты", "Пряники"]
+    category: str
     ingredients: List[str]
     unit: Literal["PIECES", "KILOGRAMS"]
     price: int
