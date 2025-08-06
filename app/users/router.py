@@ -15,7 +15,6 @@ from app.users.auth import create_access_token
 from app.users.dao import UsersDAO
 from app.users.dependencies import get_current_user
 from app.users.models import Users
-from app.users.schemas import SPhoneNumber, SUsersWithPhoneNumber
 
 router = APIRouter(
     prefix="/auth",
@@ -81,28 +80,4 @@ async def get_me(user: Users = Depends(get_current_user)):
     Returns:
         user: Экземпляр модели Users, представляющий пользователя.
     """
-    return user
-
-
-@router.patch("/")
-async def add_phone_number(
-    session: DbSession,
-    phone_number_data: SPhoneNumber = Depends(),
-    user: Users = Depends(get_current_user),
-) -> SUsersWithPhoneNumber:
-    """
-    Добавляет/Изменяет номер телефона.
-
-    Args:
-        session: DbSession(AsyncSession) - Асинхронная сессия базы данных.
-        phone_number_data: Pydantic модель SPhoneNumber, содержащая данные для добавления/измененения номера телефона.
-        user: Экземпляр модели Users, представляющий текущего пользователя, полученный через зависимость get_current_user().
-
-    Returns:
-        user: Экземпляр модели Users, представляющий пользователя с добавленным/изменнённым номером телефона.
-    """
-    user = await UsersDAO.update(  # pyright: ignore [reportAssignmentType]
-        session, model_id=user.id, phone_number=phone_number_data.phone_number
-    )
-
     return user

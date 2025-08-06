@@ -93,6 +93,49 @@ services:
     networks:
       - rabbitmq_network
 
+
+  faststream:
+    build:
+      context: .
+    environment:
+      MODE: "${MODE}"
+
+      DB_HOST: "${POSTGRES_HOST}"
+      DB_PORT: "${POSTGRES_PORT}"
+      DB_USER: "${POSTGRES_USER}"
+      DB_PASS: "${POSTGRES_PASSWORD}"
+      DB_NAME: "${POSTGRES_DB}"
+
+      REDIS_HOST: "${REDIS_HOST}"
+      REDIS_PORT: "${REDIS_PORT}"
+
+      RABBIT_USER: "${RABBITMQ_DEFAULT_USER}"
+      RABBIT_PASS: "${RABBITMQ_DEFAULT_PASS}"
+      RABBIT_HOST: "${RABBIT_HOST}"
+      RABBIT_PORT: "${RABBIT_PORT}"
+
+      SECRET_KEY: "${SECRET_KEY}"
+      ALGORITHM: "${ALGORITHM}"
+
+      BOT_TOKEN: "${BOT_TOKEN}"
+
+      PASSWORD: "${PASSWORD}"
+
+      MRH_PASS_1: "${MRH_PASS_1}"
+      MRH_PASS_2: "${MRH_PASS_2}"
+      MRH_LOGIN: "${MRH_LOGIN}"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    entrypoint:
+      [ "bash", "/candy_store/docker/faststream.sh" ]
+    networks:
+      - rabbitmq_network
+
   elasticsearch:
     image: elasticsearch:7.16.2
     volumes:

@@ -36,7 +36,7 @@ from app.logger import logger
 from app.orders.router import router as orders_router
 from app.products.router import router as products_router
 from app.purchases.router import router as purchases_router
-from app.rabbitmq.base import broker
+from app.rabbitmq.broker import broker
 from app.users.router import router as users_router
 
 

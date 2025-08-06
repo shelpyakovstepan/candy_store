@@ -60,9 +60,25 @@ services:
         condition: service_healthy
     command:
       [ "bash", "/candy_store/docker/app.sh" ]
-
     ports:
       - "7777:8000"
+    networks:
+      - rabbitmq_network
+
+  faststream:
+    build:
+      context: .
+    env_file:
+      - .env-non-dev
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    entrypoint:
+      [ "bash", "/candy_store/docker/faststream.sh" ]
     networks:
       - rabbitmq_network
 

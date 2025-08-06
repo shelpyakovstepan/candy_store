@@ -26,7 +26,7 @@ from app.products.schemas import (
     SProducts,
     SUpdateProduct,
 )
-from app.rabbitmq.base import send_message
+from app.rabbitmq.broker import send_message
 from app.rabbitmq.messages_templates import update_user_orders_text
 from app.users.dao import UsersDAO
 from app.users.schemas import SChangeAdminStatus, SUsers

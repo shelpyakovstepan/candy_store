@@ -1,7 +1,6 @@
 # THIRDPARTY
 from httpx import AsyncClient
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class TestUsersApi:
@@ -28,24 +27,3 @@ class TestUsersApi:
             authorized_user_request_response.status_code
             == status_code_for_authorized_user
         )
-
-    @pytest.mark.parametrize(
-        "phone_number, status_code",
-        [
-            ("wrong_number_format", 422),
-            ("+79012345678", 200),
-        ],
-    )
-    async def test_add_phone_number(
-        self,
-        get_session: AsyncSession,
-        create_user,
-        authenticated_ac: AsyncClient,
-        phone_number,
-        status_code,
-    ):
-        response = await authenticated_ac.patch(
-            "/auth/", params={"phone_number": phone_number}
-        )
-
-        assert response.status_code == status_code

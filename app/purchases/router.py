@@ -12,7 +12,7 @@ from app.orders.dao import OrdersDAO
 from app.orders.models import StatusEnum
 from app.purchases.dao import PurchasesDAO
 from app.purchases.utils import check_signature_result
-from app.rabbitmq.base import send_message
+from app.rabbitmq.broker import send_message
 from app.rabbitmq.messages_templates import (
     admin_orders_text,
     update_user_orders_text,

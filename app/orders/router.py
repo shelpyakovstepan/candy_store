@@ -29,7 +29,7 @@ from app.orders.models import StatusEnum
 from app.orders.schemas import SCreateOrder, SOrders
 from app.purchases.dao import PurchasesDAO
 from app.purchases.utils import generate_payment_link
-from app.rabbitmq.base import send_message
+from app.rabbitmq.broker import send_message
 from app.rabbitmq.messages_templates import user_orders_text
 from app.users.dependencies import get_current_user
 from app.users.models import Users
